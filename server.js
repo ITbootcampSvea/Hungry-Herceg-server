@@ -5,7 +5,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const auth = require('./middleware/auth');
-const PollRoute = require('./routes/PollRoute');
+const userRoute = require('./routes/UserRoute');
+const pollRoute = require('./routes/PollRoute');
+const restaurantRoute = require('./routes/RestaurantRoute');
 
 // middlewares
 app.use(express.json());
@@ -18,7 +20,9 @@ setInterval(() => {
     i++;   
 }, 1000);*/
 
-app.use('/poll', PollRoute);
+app.use('/user', userRoute);
+app.use('/poll', pollRoute);
+app.use('/restaurant', restaurantRoute);
 
 // connect to mongodb cluster
 mongoose.connect(`mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hunry-herceg?retryWrites=true&w=majority`,

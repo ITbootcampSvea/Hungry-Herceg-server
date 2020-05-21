@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // get single user
@@ -24,12 +25,56 @@ router.post('/', async (req, res) => {
 
     const user = {
         username: req.body.username,
-        passworod: hashedPassword,
+        password: hashedPassword,
         history: []
-    }
+    };
 
     const createdUser = new User(user);
+    const savedUser = await createdUser.save();
+    if(savedUser){
+        res.json({
+            user: {...savedUser._doc},
+            message: 'Success'
+        });
+    } else {
+        res.json({message: 'Error'});
+    }
+});
+
+router.post('/login', async (req, res) => {
+    const {username} = req.body;
+    const {password} = req.body
+
+    // prvo pronalazimo usera
+    const user = await User.findOne({username: username});
+    if(!user){
+        res.json({
+            message: 'Wrong credentials'
+        })
+    }
+
+    // proveravamo dali je password tacan
+    let passwordMatch;
+    try{
+        passwordMatch = await bcrypt.compare(password, user.password);
+    } catch(err){
+        console.log(err);
+    }
     
+    if(passwordMatch){
+        // pravimo token i saljemo
+        const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
+        res.json({
+            token,
+            message: 'Success'
+        });
+    } else {
+        // ne valja input
+        res.json({
+            user: null,
+            message: 'Wrong credentials'
+        });
+    }
 });
 
 module.exports = router;
