@@ -5,8 +5,14 @@ const Poll = require('../models/Poll');
 
 // find
 router.get('/', async (req, res) => {
-    console.log(req.logged);
-    const polls = await Poll.find();
+    let polls;
+    try{
+        polls = await Poll.find();
+        
+    } catch(err){
+        console.log(err);
+    }
+
     res.json({
         polls,
         message: 'Success'

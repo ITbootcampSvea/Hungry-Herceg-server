@@ -9,7 +9,7 @@ router.get('/:userId', async (req, res) => {
     const user = await User.findById(userId);
     if(user){
         res.json({
-            user: {...user._doc},
+            user: {...user._doc, password: null},
             message: 'Success'
         });
     } else {
@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
     const savedUser = await createdUser.save();
     if(savedUser){
         res.json({
-            user: {...savedUser._doc},
+            user: {...savedUser._doc, password: null},
             message: 'Success'
         });
     } else {
@@ -63,6 +63,7 @@ router.post('/login', async (req, res) => {
     
     if(passwordMatch){
         // pravimo token i saljemo
+        // 
         const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
         res.json({
             token,
@@ -70,7 +71,7 @@ router.post('/login', async (req, res) => {
         });
     } else {
         // ne valja input
-        res.json({
+        res.status(401).json({
             user: null,
             message: 'Wrong credentials'
         });

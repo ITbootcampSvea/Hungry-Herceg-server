@@ -8,6 +8,8 @@ const auth = require('./middleware/auth');
 const userRoute = require('./routes/UserRoute');
 const pollRoute = require('./routes/PollRoute');
 const restaurantRoute = require('./routes/RestaurantRoute');
+const orderRoute = require('./routes/OrderRoute');
+const mealRoute = require('./routes/MealRoute');
 
 // middlewares
 app.use(express.json());
@@ -22,7 +24,9 @@ setInterval(() => {
 
 app.use('/user', userRoute);
 app.use('/poll', pollRoute);
+app.use('/order', orderRoute);
 app.use('/restaurant', restaurantRoute);
+app.use('/meal', mealRoute);
 
 // connect to mongodb cluster
 mongoose.connect(`mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hunry-herceg?retryWrites=true&w=majority`,
