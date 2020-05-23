@@ -3,41 +3,98 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// 200 - Ok
+// 201 - Created
+// 204 - No Content
+// 400 - Bad Req
+// 401 - Unauthorized
+// 404 - Not Found
+// 500 - Server Error
+
 // get single user
 router.get('/:userId', async (req, res) => {
-    const userId = req.params.userId;
-    const user = await User.findById(userId);
-    if(user){
-        res.json({
-            user: {...user._doc, password: null},
-            message: 'Success'
-        });
-    } else {
-        res.json({
-            message: 'User does not exist'
+    const {userId} = req.params;
+    try{
+        const user = await User.findById(userId);
+        if(user){
+            res.status(200).json({
+                user: { ...user._doc, password: null },
+                message: 'Success'
+            });
+        } else {
+            res.status(400).json({
+                user: null,
+                message: 'User does not exist'
+            });
+        }
+    } catch(err){
+        console.log(err);
+        res.status(500).json({
+            user: null,
+            message: 'Invalid id'
         });
     }
 });
 
 // create user
 router.post('/', async (req, res) => {
-    const hashedPassword = await bcrypt.hash(req.body.password, 12);
+    const {username} = req.body;
+    const {password} = req.body
 
-    const user = {
-        username: req.body.username,
-        password: hashedPassword,
-        history: []
-    };
-
-    const createdUser = new User(user);
-    const savedUser = await createdUser.save();
-    if(savedUser){
-        res.json({
-            user: {...savedUser._doc, password: null},
-            message: 'Success'
+    // input check
+    if(username === '' || password === ''){
+        return res.status(400).json({
+            user: null,
+            message: 'Invalid input'
         });
-    } else {
-        res.json({message: 'Error'});
+    }
+    
+    try{
+        const userExist = await User.findOne({username: username})
+        if(userExist){
+            return res.status(400).json({
+                user: null,
+                message: 'User already exist'
+            });
+        }
+    } catch(err){
+        console.log(err);
+        return res.status(500).json({
+            user: null,
+            message: err
+        });
+    }
+
+    // da li je sve ovo moglo da se napise u jedan try/catch ili je ok ovako?
+    try{
+        const hashedPassword = await bcrypt.hash(req.body.password, 12);
+
+        const user = new User({
+            username: req.body.username,
+            password: hashedPassword,
+            history: []
+        });
+
+        const savedUser = await user.save();
+
+        if(savedUser){
+            // should I send 201 - Create status or just 200?
+            return res.status(201).json({
+                user: {...savedUser._doc, password: null},
+                message: 'Success'
+            });
+        } else {
+            return res.status(500).json({
+                user: null,
+                message: 'Error'
+            });
+        }
+    } catch(err){
+        console.log(err);
+        return res.status(500).json({
+            user: null,
+            message: err
+        });
     }
 });
 
@@ -45,35 +102,37 @@ router.post('/login', async (req, res) => {
     const {username} = req.body;
     const {password} = req.body
 
-    // prvo pronalazimo usera
-    const user = await User.findOne({username: username});
-    if(!user){
-        res.json({
-            message: 'Wrong credentials'
-        })
-    }
-
-    // proveravamo dali je password tacan
-    let passwordMatch;
     try{
-        passwordMatch = await bcrypt.compare(password, user.password);
+        // prvo pronalazimo usera
+        const user = await User.findOne({username: username});
+        if(!user){
+            return res.status(401).json({
+                user: null,
+                message: 'Wrong credentials'
+            });
+        }
+
+        // proveravamo dali je password tacan
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if(passwordMatch){
+            // pravimo token i saljemo
+            const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
+            return res.status(200).json({
+                token,
+                message: 'Success'
+            });
+        } else {
+            // ne valja input
+            return res.status(401).json({
+                user: null,
+                message: 'Wrong credentials'
+            });
+        }
     } catch(err){
         console.log(err);
-    }
-    
-    if(passwordMatch){
-        // pravimo token i saljemo
-        // 
-        const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
-        res.json({
-            token,
-            message: 'Success'
-        });
-    } else {
-        // ne valja input
-        res.status(401).json({
+        return res.status(500).json({
             user: null,
-            message: 'Wrong credentials'
+            message: err
         });
     }
 });

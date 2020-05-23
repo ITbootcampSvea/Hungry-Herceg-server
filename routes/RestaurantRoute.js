@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Restaurant = require('../models/Restaurant');
 const Meal = require('../models/Meal');
+const {getResponse} = require('../helpers');
 
 // router middleware
 
@@ -22,10 +23,16 @@ const getMeals = async mealIds => {
         try{
             // the query will ensure I get only meals with the provided list of ids
             const meals = await Meal.find({_id: {$in: mealIds}});
+
+            if(meals == 0){
+                resolve([]);
+            }
+
             const filteredMeals = await getDocMeals(meals);
             resolve(filteredMeals);
         } catch(err){
             console.log(err);
+            reject(err);
         }
     });
 }
@@ -35,13 +42,20 @@ const prepareRestaurants = async fetchedRestaurants => {
     return new Promise((resolve, reject) => {
         let newRestaurants = [];
         fetchedRestaurants.forEach(async (restaurant, index, arr) => {
-            const meals = await getMeals(restaurant.meals);
-            newRestaurants.push({
-                ...restaurant._doc,
-                meals: meals
-            });
-            if(arr.length-1 == index){
-                resolve(newRestaurants)
+            try{
+                const meals = await getMeals(restaurant.meals);
+            
+                newRestaurants.push({
+                    ...restaurant._doc,
+                    meals: meals
+                });
+                
+                if(arr.length-1 == index){
+                    resolve(newRestaurants)
+                }
+            } catch(err){
+                console.log(err);
+                reject(err);
             }
         });
     });
@@ -49,85 +63,67 @@ const prepareRestaurants = async fetchedRestaurants => {
 
 // find
 router.get('/', async (req, res) => {
-    let fetchedRestaurants = await Restaurant.find();
-    fetchedRestaurants = await prepareRestaurants(fetchedRestaurants);
-
-    res.json({
-        restaurants: [ ...fetchedRestaurants ],
-        message: 'Success'
-    });
+    try{
+        let fetchedRestaurants = await Restaurant.find();
+        
+        if(fetchedRestaurants.length == 0){
+            return res.status(200).json(getResponse([], 'Success'));
+        }
+        
+        fetchedRestaurants = await prepareRestaurants(fetchedRestaurants);
+        return res.status(200).json(getResponse([...fetchedRestaurants], 'Success'));
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, 'Server Error'));
+    }
 });
 
 // get one
 router.get('/:restaurantId', async (req, res) => {
-    const id = req.params.restaurantId;
-    let restaurant;
     try{
-        restaurant = await Restaurant.findById(id);
+        let restaurant = await Restaurant.findById(req.params.restaurantId);
         restaurant = await prepareRestaurants([restaurant]);
+        return res.json(getResponse(restaurant[0], 'Success'));
     } catch(err){
-        res.json({
-            message: 'Poll doesnt exist',
-            error: err
-        })
+        console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-    res.json({
-        restaurant,
-        message: 'Success'
-    });
 });
 
 // create
 router.post('/', async (req, res) => {
-    let restaurant = {
+    if(req.body.name == '' || req.body.address == ''){
+        return res.status(400).json(getResponse(null, 'Bad Request'));
+    }
+    
+    const restaurant = new Restaurant({
         name: req.body.name,
         address: req.body.address,
         tags: req.body.tags,
         meals: req.body.meals
-    }
-    
-    const createdRestaurant = new Restaurant(restaurant);
-    let savedRestaurant;
+    });
+
     try{
-        savedRestaurant = await createdRestaurant.save();
-        savedRestaurant = await prepareRestaurants([savedRestaurant]);
+        const savedRestaurant = await restaurant.save();
+        return res.status(200).json(getResponse(savedRestaurant._doc, 'Success'));
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-
-    res.json({
-        restaurant: savedRestaurant[0],
-        message: 'Success'
-    });
 });
 
 // edit
 router.put('/:restaurantId', async (req, res) => {
-    const id = req.params.restaurantId;
-    let restaurant;
     try{
-        restaurant = await Restaurant.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        console.log(req.params.restaurantId);
+        let restaurant = await Restaurant.findOneAndUpdate(req.params.restaurantId, { ...req.body }, {useFindAndModify: false});
+        console.log(restaurant);
         restaurant = await prepareRestaurants([restaurant]);
+        return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-
-    // this should be different
-    /*if(!restaurant){
-        res.json({
-            restaurant: null,
-            message: 'Error while editing restaurant'
-        });
-    }*/
-
-    res.json({
-        restaurant: {
-            ...restaurant[0]._doc,
-            ...req.body,
-            meals: restaurant[0].meals
-        },
-        message: 'Success'
-    });
 });
 
 // edit

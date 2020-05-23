@@ -1,110 +1,114 @@
 const router = require('express').Router();
 const Meal = require('../models/Meal');
 
+const {getResponse} = require('../helpers/index');
+
 // find
 router.get('/', async (req, res) => {
-    const meals = await Meal.find();
-    res.json({
-        meals,
-        message: 'Success'
-    });
+    try{
+        const meals = await Meal.find();
+        return res.status(200).json(getResponse(meals, 'Success'));
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, err));
+    }
 });
 
 // get one
 router.get('/:mealId', async (req, res) => {
-    const id = req.params.mealId;
-    let meal;
+    const {mealId} = req.params;
     try{
-        meal = await Meal.findById(id);
-        res.json({
-            meal,
-            message: 'Success'
-        });
+        const meal = await Meal.findById(mealId);
+        if(meal){
+            return res.status(200).json(getResponse(meal, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'))
+        }
     } catch(err){
-        res.status(400).json({
-            message: 'Meal doesnt exist'
-        });
+        console.log(err);
+        return res.status(400).json(getResponse(null, err));
     }
 });
 
 router.post('/', async (req, res) => {
-    let meal = {
-        name: req.body.name,
-        price: req.body.price,
-        tag: req.body.tag
+    const {name, price, tag} = req.body;
+
+    // input validation - should create func for this
+    if(name == '' || tag == ''){
+        return res.status(400).json(getResponse(null, 'Bad Request'));
     }
     
-    // save to db
-    const createdMeal = new Meal(meal);
-    let savedMeal;
     try{
-        savedMeal = await createdMeal.save();
+        const meal = new Meal({
+            name: name,
+            price: price,
+            tag: tag
+        });
+        // save to db
+        savedMeal = await meal.save();
+        // send result
+        return res.status(200).json(getResponse(savedMeal._doc, 'Success'));
     } catch(err){
         console.log(err);
+        return res.status(400).json(getResponse(null, err));
     }
-
-    // send result
-    res.json({
-        meal: {
-            ...savedMeal._doc
-        },
-        message: 'Success'
-    });
 });
 
 // edit
 router.put('/:mealId', async (req, res) => {
-    const id = req.params.mealId;
-    let meal;
-
+    const {name, price, tag} = req.body;
+    if(name == '' || tag == ''){
+        return res.status(400).json(getResponse(null, 'Bad Request'));
+    }
+    
     try{
-        meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        const id = req.params.mealId;
+        const meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        if(meal){
+            return res.status(200).json(getResponse({ ...meal._doc, ...req.body }, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
+        return res.status(400).json(getResponse(null, err));
     }
-
-    res.json({
-        meal: {
-            ...meal._doc,
-            ...req.body
-        },
-        message: 'Success'
-    });
 });
 
 // edit
 router.patch('/:mealId', async (req, res) => {
-    const id = req.params.mealId;
-    let meal;
-
+    const {name, price, tag} = req.body;
+    if(name == '' || tag == ''){
+        return res.status(400).json(getResponse(null, 'Bad Request'));
+    }
+    
     try{
-        meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        const id = req.params.mealId;
+        const meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        if(meal){
+            return res.status(200).json(getResponse({ ...meal._doc, ...req.body }, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
+        return res.status(400).json(getResponse(null, err));
     }
-
-    res.json({
-        meal: {
-            ...meal._doc,
-            ...req.body
-        },
-        message: 'Success'
-    });
 });
 
 // delete
 router.delete('/:mealId', async (req, res) => {
-    let deletedMeal;
     try{
-        deletedMeal = await Poll.findByIdAndDelete(req.params.mealId);
+        const deletedMeal = await Meal.findByIdAndDelete(req.params.mealId);
+        if(deletedMeal){
+            return res.status(200).json(getResponse(deletedMeal._doc, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
+        res.status(400).json(getResponse(null, err));
     }
-
-    res.json({
-        meal: { ...deletedMeal._doc },
-        message: 'Success'
-    });
 });
 
 module.exports = router;
