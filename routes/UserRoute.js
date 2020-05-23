@@ -2,6 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const {getResponse} = require('../helpers');
 
 // 200 - Ok
 // 201 - Created
@@ -17,22 +18,13 @@ router.get('/:userId', async (req, res) => {
     try{
         const user = await User.findById(userId);
         if(user){
-            res.status(200).json({
-                user: { ...user._doc, password: null },
-                message: 'Success'
-            });
+            return res.status(200).json(getResponse({ ...user._doc, password: null }, 'Success'));
         } else {
-            res.status(400).json({
-                user: null,
-                message: 'User does not exist'
-            });
+            return res.status(400).json(getResponse(null, 'User does not exist'));
         }
     } catch(err){
         console.log(err);
-        res.status(500).json({
-            user: null,
-            message: 'Invalid id'
-        });
+        return res.status(500).json(getResponse(null, 'Invalid id'));
     }
 });
 
@@ -43,26 +35,17 @@ router.post('/', async (req, res) => {
 
     // input check
     if(username === '' || password === ''){
-        return res.status(400).json({
-            user: null,
-            message: 'Invalid input'
-        });
+        return res.status(400).json(getResponse(null, 'Invalid input'));
     }
     
     try{
         const userExist = await User.findOne({username: username})
         if(userExist){
-            return res.status(400).json({
-                user: null,
-                message: 'User already exist'
-            });
+            return res.status(400).json(getResponse(null, 'User already exist'));
         }
     } catch(err){
         console.log(err);
-        return res.status(500).json({
-            user: null,
-            message: err
-        });
+        return res.status(500).json(getResponse(null, err));
     }
 
     // da li je sve ovo moglo da se napise u jedan try/catch ili je ok ovako?
@@ -79,22 +62,13 @@ router.post('/', async (req, res) => {
 
         if(savedUser){
             // should I send 201 - Create status or just 200?
-            return res.status(201).json({
-                user: {...savedUser._doc, password: null},
-                message: 'Success'
-            });
+            return res.status(201).json(getResponse({...savedUser._doc, password: null}, 'Success'));
         } else {
-            return res.status(500).json({
-                user: null,
-                message: 'Error'
-            });
+            return res.status(500).json(getResponse(null, 'Error while saving user'));
         }
     } catch(err){
         console.log(err);
-        return res.status(500).json({
-            user: null,
-            message: err
-        });
+        return res.status(500).json(getResponse(null, err));
     }
 });
 
@@ -106,10 +80,7 @@ router.post('/login', async (req, res) => {
         // prvo pronalazimo usera
         const user = await User.findOne({username: username});
         if(!user){
-            return res.status(401).json({
-                user: null,
-                message: 'Wrong credentials'
-            });
+            return res.status(401).json(getResponse(null, 'Wrong credentials'));
         }
 
         // proveravamo dali je password tacan
@@ -117,23 +88,14 @@ router.post('/login', async (req, res) => {
         if(passwordMatch){
             // pravimo token i saljemo
             const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
-            return res.status(200).json({
-                token,
-                message: 'Success'
-            });
+            return res.status(200).json(getResponse(token, 'Success'));
         } else {
             // ne valja input
-            return res.status(401).json({
-                user: null,
-                message: 'Wrong credentials'
-            });
+            return res.status(401).json(getResponse(null, 'Wrong credentials'));
         }
     } catch(err){
         console.log(err);
-        return res.status(500).json({
-            user: null,
-            message: err
-        });
+        return res.status(500).json(getResponse(null, err));
     }
 });
 

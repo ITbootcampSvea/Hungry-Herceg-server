@@ -32,8 +32,7 @@ const pollSchema = new Schema({
     restaurants: [
         {
             restaurantId: {
-                // type: mongoose.Types.ObjectId,
-                type: Number,
+                type: mongoose.Types.ObjectId,
                 required: true   
             },
             votes: {

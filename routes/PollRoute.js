@@ -1,99 +1,88 @@
 const router = require('express').Router();
 const Poll = require('../models/Poll');
+const {getResponse} = require('../helpers');
 
 // router middleware
 
 // find
 router.get('/', async (req, res) => {
-    let polls;
     try{
-        polls = await Poll.find();
-        
+        const polls = await Poll.find();
+        return res.status(200).json(getResponse(polls, 'Success'));
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-
-    res.json({
-        polls,
-        message: 'Success'
-    });
 });
 
 // get one
 router.get('/:pollId', async (req, res) => {
-    const id = req.params.pollId;
-    let poll;
     try{
-        poll = await Poll.findById(id);
+        const poll = await Poll.findById(req.params.pollId);
+        if(poll){
+            return res.status(200).json(getResponse(poll, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
-        res.json({
-            message: 'Poll doesnt exist'
-        })
+        return res.status(500).json(getResponse(null, err));
     }
-    res.json({
-        poll,
-        message: 'Success'
-    });
 });
 
+// create poll
 router.post('/', async (req, res) => {
-    // create poll
+    const {name, author, duration, restaurants} = req.body;
 
-    /*
-    *   add some validation
-    */
+    // validation
+    if(name == '' || author == '' || typeof(duration) != 'number' || restaurants.length == 0){
+        return res.status(400).json(getResponse(null, 'Bad Request'));
+    }
 
     // time of creating poll
     let currentTime = new Date();
 
-    let poll = {
-        name: req.body.name,
-        author: req.body.author,
+    let pollModel = {
+        name: name,
+        author: author,
         createdAt: currentTime.toISOString(),
-        duration: req.body.duration,
+        duration: duration,
         status: true,
-        restaurants: req.body.restaurants
+        restaurants: restaurants.map(id => { return {restaurantId: id, votes: 0}})
     }
 
     // calculating the time when the poll will end
     let minutes = currentTime.getMinutes();
-    currentTime.setMinutes(minutes + req.body.duration);
-    poll.ends = currentTime.toISOString();
+    currentTime.setMinutes(minutes + duration);
+    pollModel.ends = currentTime.toISOString();
     
-    // save to db
-    const createdPoll = new Poll(poll);
-    let savedPoll;
     try{
-        savedPoll = await createdPoll.save();
+        // save to db
+        const poll = new Poll(pollModel);
+        const savedPoll = await poll.save();
+        if(savedPoll){
+            return res.status(200).json(getResponse(savedPoll._doc, 'Success'));
+        } else {
+            return res.status(500).json(getResponse(null, 'Error while saving poll'));
+        }
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-
-    // send result
-    res.json({
-        poll:{
-            ...savedPoll._doc
-        },
-        message: 'Success'
-    });
 });
 
 // edit
 router.put('/:pollId', async (req, res) => {
     try{
         // findOneAndUpdate wont return new data but same data
-        const poll = await Poll.findOneAndUpdate(req.params.pollId, {
-            ...req.body
-        }, {useFindAndModify: false});
-        res.json({
-            poll: {
-                ...poll._doc,
-                ...req.body
-            },
-            message: 'Success'
-        })
+        const editedPoll = await Poll.findOneAndUpdate({_id: req.params.pollId}, { ...req.body }, {useFindAndModify: false});
+        if(editedPoll){
+            return res.status(200).json(getResponse({ ...editedPoll._doc, ...req.body }, 'Success'));
+        } else {
+            return res.status(500).json(getResponse(null, 'Error while editing poll'));
+        }
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
 });
 

@@ -115,9 +115,7 @@ router.post('/', async (req, res) => {
 // edit
 router.put('/:restaurantId', async (req, res) => {
     try{
-        console.log(req.params.restaurantId);
-        let restaurant = await Restaurant.findOneAndUpdate(req.params.restaurantId, { ...req.body }, {useFindAndModify: false});
-        console.log(restaurant);
+        let restaurant = await Restaurant.findOneAndUpdate({_id: req.params.restaurantId}, { ...req.body }, {useFindAndModify: false});
         restaurant = await prepareRestaurants([restaurant]);
         return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
     } catch(err){
@@ -128,46 +126,30 @@ router.put('/:restaurantId', async (req, res) => {
 
 // edit
 router.patch('/:restaurantId', async (req, res) => {
-    const id = req.params.restaurantId;
-    let restaurant;
     try{
-        restaurant = await Restaurant.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        let restaurant = await Restaurant.findOneAndUpdate({_id: req.params.restaurantId}, { ...req.body }, {useFindAndModify: false});
         restaurant = await prepareRestaurants([restaurant]);
+        return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-
-    // this should be different
-    /*if(!restaurant){
-        res.json({
-            restaurant: null,
-            message: 'Error while editing restaurant'
-        });
-    }*/
-
-    res.json({
-        restaurant: {
-            ...restaurant[0]._doc,
-            ...req.body,
-            meals: restaurant[0].meals
-        },
-        message: 'Success'
-    });
 });
 
 // delete
 router.delete('/:restaurantId', async (req, res) => {
-    const id = req.params.restaurantId;
-    let deletedRestaurant;
     try{
-        deletedRestaurant = await Restaurant.findByIdAndDelete(id);
+        const id = req.params.restaurantId;
+        const deletedRestaurant = await Restaurant.findByIdAndDelete(id);
+        if(deletedRestaurant){
+            return res.status(200).json(getResponse(deletedRestaurant._doc, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
-    res.json({
-        restaurant: { ...deletedRestaurant._doc },
-        message: 'Success'
-    });
 });
 
 module.exports = router;

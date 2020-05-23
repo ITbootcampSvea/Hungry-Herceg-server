@@ -63,7 +63,7 @@ router.put('/:mealId', async (req, res) => {
     
     try{
         const id = req.params.mealId;
-        const meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        const meal = await Meal.findOneAndUpdate({_id: id}, { ...req.body }, {useFindAndModify: false});
         if(meal){
             return res.status(200).json(getResponse({ ...meal._doc, ...req.body }, 'Success'));
         } else {
@@ -84,7 +84,7 @@ router.patch('/:mealId', async (req, res) => {
     
     try{
         const id = req.params.mealId;
-        const meal = await Meal.findOneAndUpdate(id, { ...req.body }, {useFindAndModify: false});
+        const meal = await Meal.findOneAndUpdate({_id: id}, { ...req.body }, {useFindAndModify: false});
         if(meal){
             return res.status(200).json(getResponse({ ...meal._doc, ...req.body }, 'Success'));
         } else {
