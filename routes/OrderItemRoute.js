@@ -62,9 +62,9 @@ router.get('/:orderItemId', async (req, res) => {
 })
 
 router.post('/', async (req, res,) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {orderId, user, meal, quantity, note} = req.body;
 
@@ -100,9 +100,9 @@ router.post('/', async (req, res,) => {
 });
 
 router.put('/:orderItemId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {orderItemId} = req.params;
     try{
@@ -119,9 +119,9 @@ router.put('/:orderItemId', async (req, res) => {
 });
 
 router.delete('/:orderItemId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {orderItemId} = req.params;
     try{

@@ -96,9 +96,9 @@ router.get('/:restaurantId', async (req, res) => {
 
 // create
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     if(req.body.name == '' || req.body.address == ''){
         return res.status(400).json(getResponse(null, 'Bad Request'));
@@ -127,9 +127,9 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:restaurantId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     try{
         let restaurant = await Restaurant.findOneAndUpdate({_id: req.params.restaurantId}, { ...req.body }, {useFindAndModify: false});
@@ -147,9 +147,9 @@ router.put('/:restaurantId', async (req, res) => {
 
 // delete
 router.delete('/:restaurantId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     try{
         const id = req.params.restaurantId;

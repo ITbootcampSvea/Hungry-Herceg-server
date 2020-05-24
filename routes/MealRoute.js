@@ -31,9 +31,9 @@ router.get('/:mealId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {name, price, tag} = req.body;
     // input validation - should create func for this
@@ -63,9 +63,9 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:mealId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {name, price, tag} = req.body;
     if(name == '' || tag == ''){
@@ -88,9 +88,9 @@ router.put('/:mealId', async (req, res) => {
 
 // delete
 router.delete('/:mealId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    /*if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     try{
         const deletedMeal = await Meal.findByIdAndDelete(req.params.mealId);

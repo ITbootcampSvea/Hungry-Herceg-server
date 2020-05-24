@@ -36,9 +36,9 @@ router.get("/:orderId", async (req, res) => {
 //POST
 //creates new order
 router.post("/", async (req, res) => {
-    if(!req.logged){
+    /*if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const newOrder = new Order({
         pollId: req.body.pollId,

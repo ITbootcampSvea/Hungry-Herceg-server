@@ -223,9 +223,9 @@ router.put('/:pollId', async (req, res) => {
 
 // delete
 router.delete('/:pollId', async (req, res) => {
-    if(!req.logged){
+    /*if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     try{
         const deletedPoll = await Poll.findByIdAndDelete(req.params.pollId);
@@ -242,9 +242,9 @@ router.delete('/:pollId', async (req, res) => {
 
 // vote
 router.post('/:pollId/vote', async (req, res) => {
-    if(!req.logged){
+    /*if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     // provera da li user nije vec glasao
     // return res.status(200).json(getResponse(null, 'You already voted'));
