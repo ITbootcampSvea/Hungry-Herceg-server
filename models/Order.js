@@ -11,11 +11,11 @@ const orderSchema = new Schema({
     required: true,
   },
   duration: {
-    type: String,
+    type: Number,
     required: true,
   },
   status: {
-    type: String,
+    type: Boolean,
     required: true,
   },
   orderItemsList: [

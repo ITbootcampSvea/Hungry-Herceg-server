@@ -1,102 +1,57 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
+
+// order model
 const Order = require("../models/Order");
 
-// router middleware
-
-// find
-router.get("/", async (req, res) => {
-  console.log(req.logged);
-  const orders = await Order.find();
-  res.json({
-    orders,
-    message: "Success",
-  });
+// GET
+// returns all order items
+router.get("/", (req, res) => {
+  Order.find()
+    .sort({ duration: -1 })
+    .then((orders) => res.json(orders));
 });
 
-// get one
+// GET
+// returns one order found by id
 router.get("/:orderId", async (req, res) => {
-  const id = req.params.orderId;
-  let order;
   try {
-    order = await Order.findById(id);
+    let order = await Order.findById(req.params.orderId);
+    return res.status(200).json({ message: order });
   } catch (err) {
-    res.json({
-      message: "Order doesn't exist",
-    });
+    console.log(err);
+    return res.status(500).json({ message: err });
   }
-  res.json({
-    order,
-    message: "Success",
-  });
 });
 
+//POST
+//creates new order
 router.post("/", async (req, res) => {
-  let order = {
+  const newOrder = new Order({
     pollId: req.body.pollId,
     restaurantId: req.body.restaurantId,
-    duration: 10,
+    duration: 20,
     status: true,
-    orderItemsList: []
-  };
-  //save to db
-  const createdOrder = new Order(order);
-  let savedOrder;
-  try {
-    savedOrder = await createdOrder.save();
-  } catch (err) {
-    console.log(err);
-  }
-
-  // send result
-  res.json({
-    order: {
-      ...savedOrder._doc,
-    },
-    message: "Success",
+    orderItemsList: [],
   });
+  try {
+    const savedOrder = await newOrder.save();
+    res.json(savedOrder);
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
 });
 
-// edit
+//edit
+//change order by id
 router.put("/:orderId", async (req, res) => {
   try {
-    // findOneAndUpdate wont return new data but same data
-    const order = await Order.findOneAndUpdate(
-      req.params.orderId,
-      {
-        ...req.body,
-      },
-      { useFindAndModify: false }
-    );
-    res.json({
-      order: {
-        ...order._doc,
-        ...req.body,
-      },
-      message: "Success",
-    });
+    const foundOrder = await Order.findById(req.params.orderId);
+    foundOrder.status = req.body.status;
+    foundOrder.orderItemsList = req.body.orderItemsList
+    res.json(foundOrder);
   } catch (err) {
-    console.log(err);
-  }
-});
-
-// edit
-router.patch("/:orderId", async (req, res) => {
-  try {
-    // id, data for update, options
-    const order = await Order.findOneAndUpdate(
-      req.params.orderId,
-      { ...req.body },
-      { useFindAndModify: false }
-    );
-    res.json({
-      order: {
-        ...order._doc,
-        ...req.body,
-      },
-      message: "Success",
-    });
-  } catch (err) {
-    console.log(err);
+    res.status(500).json({ message: err });
   }
 });
 
