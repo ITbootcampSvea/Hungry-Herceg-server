@@ -35,13 +35,14 @@ const pollSchema = new Schema({
                 type: mongoose.Types.ObjectId,
                 required: true   
             },
-            votes: {
-                type: Number,
-                required: true
-            }
+            votes: [
+                {
+                    type: mongoose.Types.ObjectId,
+                    required: true
+                }
+            ]
         }
-    ]       
-
+    ]
 });
 
 module.exports = mongoose.model('Poll', pollSchema);

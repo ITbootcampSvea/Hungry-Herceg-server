@@ -3,27 +3,27 @@ const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
   pollId: {
-    type: Number,
-    required: true,
+    type: mongoose.Types.ObjectId,
+    required: true
   },
   restaurantId: {
-    type: Number,
-    required: true,
+    type: mongoose.Types.ObjectId,
+    required: true
   },
   duration: {
     type: Number,
-    required: true,
+    required: true
   },
   status: {
     type: Boolean,
-    required: true,
+    required: true
   },
-  orderItemsList: [
+  orderItemList: [
     {
       type: mongoose.Types.ObjectId,
-      required: true,
-    },
-  ],
+      required: true
+    }
+  ]
 });
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -10,7 +10,7 @@ const getDocMeals = async meals => {
     return new Promise((resolve, reject) => {
         let newMeals = [];
         meals.forEach((meal, i, arr) => {
-            newMeals.push(meal._doc);
+            newMeals.push(meal);
             if(arr.length-1 == i){
                 resolve(newMeals);
             }
@@ -82,8 +82,12 @@ router.get('/', async (req, res) => {
 router.get('/:restaurantId', async (req, res) => {
     try{
         let restaurant = await Restaurant.findById(req.params.restaurantId);
-        restaurant = await prepareRestaurants([restaurant]);
-        return res.json(getResponse(restaurant[0], 'Success'));
+        if(restaurant){
+            restaurant = await prepareRestaurants([restaurant]);
+            return res.json(getResponse(restaurant[0], 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
@@ -92,6 +96,10 @@ router.get('/:restaurantId', async (req, res) => {
 
 // create
 router.post('/', async (req, res) => {
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     if(req.body.name == '' || req.body.address == ''){
         return res.status(400).json(getResponse(null, 'Bad Request'));
     }
@@ -100,12 +108,17 @@ router.post('/', async (req, res) => {
         name: req.body.name,
         address: req.body.address,
         tags: req.body.tags,
-        meals: req.body.meals
+        meals: []
     });
 
     try{
-        const savedRestaurant = await restaurant.save();
-        return res.status(200).json(getResponse(savedRestaurant._doc, 'Success'));
+        let savedRestaurant = await restaurant.save();
+        if(savedRestaurant){
+            savedRestaurant = await prepareRestaurants([savedRestaurant]);
+            return res.status(200).json(getResponse(savedRestaurant[0], 'Success'));
+        } else {
+            return res.status(500).json(getResponse(null, 'Error while saving restaurant'));
+        }
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
@@ -114,22 +127,18 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:restaurantId', async (req, res) => {
-    try{
-        let restaurant = await Restaurant.findOneAndUpdate({_id: req.params.restaurantId}, { ...req.body }, {useFindAndModify: false});
-        restaurant = await prepareRestaurants([restaurant]);
-        return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
-    } catch(err){
-        console.log(err);
-        return res.status(500).json(getResponse(null, err));
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
-});
 
-// edit
-router.patch('/:restaurantId', async (req, res) => {
     try{
         let restaurant = await Restaurant.findOneAndUpdate({_id: req.params.restaurantId}, { ...req.body }, {useFindAndModify: false});
-        restaurant = await prepareRestaurants([restaurant]);
-        return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
+        if(restaurant){
+            restaurant = await prepareRestaurants([restaurant]);
+            return res.status(200).json(getResponse({ ...restaurant[0], ...req.body }, 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
@@ -138,11 +147,15 @@ router.patch('/:restaurantId', async (req, res) => {
 
 // delete
 router.delete('/:restaurantId', async (req, res) => {
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     try{
         const id = req.params.restaurantId;
         const deletedRestaurant = await Restaurant.findByIdAndDelete(id);
         if(deletedRestaurant){
-            return res.status(200).json(getResponse(deletedRestaurant._doc, 'Success'));
+            return res.status(200).json(getResponse(null, 'Success'));
         } else {
             return res.status(404).json(getResponse(null, 'Not Found'));
         }

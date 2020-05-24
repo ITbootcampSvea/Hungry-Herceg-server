@@ -13,6 +13,16 @@ const {getResponse} = require('../helpers');
 // 500 - Server Error
 
 // get single user
+router.get('/', async (req, res) => {
+    try{
+        const users = await User.find();
+        return res.status(200).json(getResponse(users, 'Success'));
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, 'Invalid id'));
+    }
+});
+
 router.get('/:userId', async (req, res) => {
     const {userId} = req.params;
     try{
@@ -30,6 +40,10 @@ router.get('/:userId', async (req, res) => {
 
 // create user
 router.post('/', async (req, res) => {
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     const {username} = req.body;
     const {password} = req.body
 
@@ -73,6 +87,10 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     const {username} = req.body;
     const {password} = req.body
 
@@ -88,10 +106,32 @@ router.post('/login', async (req, res) => {
         if(passwordMatch){
             // pravimo token i saljemo
             const token = await jwt.sign({userId: user._id, username: user.username}, 'secretkey');
-            return res.status(200).json(getResponse(token, 'Success'));
+            return res.status(200).json(getResponse({
+                token: token,
+                userId: user._id,
+                username: user.username
+            }, 'Success'));
         } else {
             // ne valja input
             return res.status(401).json(getResponse(null, 'Wrong credentials'));
+        }
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, err));
+    }
+});
+
+router.delete('/:userId', async (req, res) => {
+    if(!req.logged && req.user != 'admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
+    try{
+        const deletedUser = await User.findByIdAndDelete(req.params.userId);
+        if(deletedUser){
+            return res.status(200).json(getResponse(null, 'Success'));
+        } else{
+            return res.status(404).json(getResponse(null, 'Not Found'));
         }
     } catch(err){
         console.log(err);

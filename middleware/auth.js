@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
         return next();
     }
 
-    const token = authHeader.split('')[1];
+    const token = authHeader.split(' ')[1];
     if(!token){
         req.logged = false;
         return next();
@@ -24,7 +24,7 @@ module.exports = (req, res, next) => {
         return next();
     }
 
-    req.user = decodedToken.user;
+    req.user = decodedToken.username;
     req.userId = decodedToken.userId;
     req.logged = true;
     next();
