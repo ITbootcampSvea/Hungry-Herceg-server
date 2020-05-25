@@ -44,6 +44,9 @@ const prepareOrderItems = orderItems => {
 const getOrderItemList = orderItemIds => {
     return new Promise(async (resolve, reject) => {
         try{
+            if(orderItemIds.length == 0){
+                resolve([]);
+            }
             let orderItems = await OrderItem.find({_id: {$in: orderItemIds}});
             orderItems = await prepareOrderItems(orderItems);
 
@@ -83,20 +86,16 @@ const prepareOrders = async orders => {
 
         for(let i = 0; i < orders.length; i++){
             try{
-                if(orders[i].orderItemList.length == 0){
-                    newOrders.push({...orders[i]._doc});
-                } else {
-                    const orderItemList = await getOrderItemList(orders[i].orderItemList);
-                    const restaurantId = await Restaurant.findById(orders[i].restaurantId);
-                    const pollId = await Poll.findById(orders[i].pollId);
-    
-                    newOrders.push({
-                        ...orders[i]._doc,
-                        pollId,
-                        restaurantId,
-                        orderItemList
-                    });
-                }
+                const orderItemList = await getOrderItemList(orders[i].orderItemList);
+                const restaurantId = await Restaurant.findById(orders[i].restaurantId);
+                const pollId = await Poll.findById(orders[i].pollId);
+
+                newOrders.push({
+                    ...orders[i]._doc,
+                    pollId,
+                    restaurantId,
+                    orderItemList
+                });
             } catch(err){
                 console.log(err);
                 reject(err);
