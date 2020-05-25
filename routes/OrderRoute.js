@@ -71,9 +71,10 @@ router.put("/:orderId", async (req, res) => {
     }
 
     try {
-        const order = await Order.findOneAndUpdate({_id: req.params.orderId}, { ...req.body }, {useFindAndModify: false});
+        let order = await Order.findOneAndUpdate({_id: req.params.orderId}, { ...req.body }, {useFindAndModify: false});
         if(order){
-            return res.status(200).json(getResponse({ ...order._doc, ...req.body }, 'Success'));
+            order = await prepareOrders([order]);
+            return res.status(200).json(getResponse({ ...order[0], ...req.body }, 'Success'));
         } else {
             return res.status(404).json(getResponse(null, 'Error while editing poll'));
         }

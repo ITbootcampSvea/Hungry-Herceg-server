@@ -87,10 +87,6 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
-        return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
-
     const {username} = req.body;
     const {password} = req.body
 
