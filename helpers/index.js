@@ -17,12 +17,16 @@ const prepareOrderItems = orderItems => {
             let newOrderItems = [];
             orderItems.forEach(async (orderItem, i, arr) => {
                 try{
-                    const meal = await Meal.findById(orderItem.meal);
-    
-                    newOrderItems.push({
-                        ...orderItem._doc,
-                        meal: meal
-                    });
+                    if(orderItem.meal != null || orderItem.meal != undefined){
+                        const meal = await Meal.findById(orderItem.meal);
+        
+                        newOrderItems.push({
+                            ...orderItem._doc,
+                            meal: meal
+                        });
+                    } else {
+                        newOrderItems.push(orderItem._doc);
+                    }
     
                     if(arr.length-1 == i){
                         resolve(newOrderItems);

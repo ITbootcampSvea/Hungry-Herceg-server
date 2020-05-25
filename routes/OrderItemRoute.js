@@ -4,6 +4,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const OrderItem = require("../models/OrderItem");
 const User = require('../models/User');
+const Poll = require('../models/Poll');
 
 const {getResponse, prepareOrderItems} = require('../helpers');
 
@@ -28,8 +29,12 @@ router.get("/", async (req, res) => {
 router.get('/:orderItemId', async (req, res) => {
     try{
         let orderItem = await OrderItem.findById(req.params.orderItemId);
-        orderItem = await prepareOrderItems([orderItem]);
-        return res.status(200).json(getResponse(orderItem[0], 'Success'));
+        if(orderItem){
+            orderItem = await prepareOrderItems([orderItem]);
+            return res.status(200).json(getResponse(orderItem[0], 'Success'));
+        } else {
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
@@ -43,7 +48,20 @@ router.post('/', async (req, res,) => {
 
     const {orderId, meal, quantity, note} = req.body;
 
+    if(orderId == '' || meal == '' || quantity <= 0){
+        return res.status(400).json(getResponse(null, 'Invalid input'));
+    }
+
     try{
+        let order = await Order.findById(orderId);
+        if(!order){
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
+
+        if(!order.status){
+            return res.status(400).json(getResponse(null, 'Order is not active anymore!'));
+        }
+
         const orderItem = new OrderItem({
             orderId: orderId,
             user: req.user,
@@ -60,7 +78,6 @@ router.post('/', async (req, res,) => {
             await user.save();
 
             // save to orderItemList in order
-            const order = await Order.findById(orderId);
             order.orderItemList.push(savedOrderItem._id);
             await order.save();
 
@@ -82,14 +99,29 @@ router.put('/:orderItemId', async (req, res) => {
     }
 
     const {orderItemId} = req.params;
-
+    
     try{
-        let editedOrderItem = await OrderItem.findByIdAndUpdate(
-            {_id: req.params.orderItemId}, 
-            {...req.body},
-            {useFindAndModify: false});
-        editedOrderItem = await prepareOrderItems([editedOrderItem]);
-        return res.status(200).json(getResponse({...editedOrderItem[0], ...req.body}, 'Success'));
+        let orderItem = await OrderItem.findById(orderItemId);
+        if(!orderItem){
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
+        if(req.user != orderItem.user){
+            return res.status(401).json(getResponse(null, 'Unauthorized'));
+        }
+
+        let order = await Order.findById(orderItem.orderId);
+        if(!order){
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
+        
+        // da li je order aktivan
+        if(!order.status){
+            return res.status(400).json(getResponse(null, 'Order is not active anymore!'));
+        }
+
+        await orderItem.updateOne({...req.body});
+        orderItem = await prepareOrderItems([orderItem]);
+        return res.status(200).json(getResponse({...orderItem[0], ...req.body}, 'Success'));
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
@@ -101,25 +133,48 @@ router.delete('/:orderItemId', async (req, res) => {
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
+    // trebalo bi biti provere da li je Order aktivan, ako jeste onda moze da se izbrise, ako ne, nema smisla...
     const {orderItemId} = req.params;
     
     try{
-        const deletedOrderItem = await OrderItem.findByIdAndDelete({_id: orderItemId});
-        if(deletedOrderItem){
-            let order = await Order.findById(deletedOrderItem.orderId);
-
-            // remove from order
-            for(let i = 0; i < order.orderItemList.length; i++){
-                if(order.orderItemList[i] == orderItemId){
-                    order.orderItemList.splice(i, 1);
-                }
-            }
-            await order.save();
-
-            return res.status(200).json(getResponse(null, 'Success'));
-        } else {
-            return res.status(200).json(getResponse(null, 'Not Found'));
+        const orderItem = await OrderItem.findById(req.params.orderItemId);
+        if(!orderItem){
+            return res.status(404).json(getResponse(null, 'Not Found'));
         }
+
+        // da li user koji je kreairao orderItem pokusava da izbrise orderItem
+        if(req.user != orderItem.user){
+            return res.status(401).json(getResponse(null, 'Unauthorized'));
+        }
+
+        // da li je order aktivan
+        let order = await Order.findById(orderItem.orderId);
+        if(!order.status){
+            return res.status(400).json(getResponse(null, 'Order is not active anymore!'));
+        }
+
+        await orderItem.remove();
+
+        // remove from order
+        for(let i = 0; i < order.orderItemList.length; i++){
+            if(order.orderItemList[i] == orderItemId){
+                order.orderItemList.splice(i, 1);
+                break;
+            }
+        }
+        await order.save();
+
+        // remove from user.history 
+        let user = await User.findById(req.userId);
+        for(let i = 0; user.history.length; i++){
+            if(user.history[i]._id == orderItemId){
+                user.history.splice(i, 1);
+                break;
+            }
+        }
+        await user.save();
+
+        return res.status(200).json(getResponse(null, 'Success'));
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));

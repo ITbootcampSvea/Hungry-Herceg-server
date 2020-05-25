@@ -92,37 +92,25 @@ router.put('/:pollId', async (req, res) => {
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
-    // update bi definitivno trebao malo da se doradi
-    if(req.body.restaurants == undefined){
-        try{
-            // findOneAndUpdate wont return new data but same data
-            const editedPoll = await Poll.findOneAndUpdate({_id: req.params.pollId}, { ...req.body }, {useFindAndModify: false});
-            if(editedPoll){
-                return res.status(200).json(getResponse({ ...editedPoll._doc, ...req.body }, 'Success'));
-            } else {
-                return res.status(404).json(getResponse(null, 'Error while editing poll'));
-            }
-        } catch(err){
-            console.log(err);
-            return res.status(500).json(getResponse(null, err));
+    try{
+        let poll = await Poll.findById(req.params.pollId);
+        if(!poll){
+            return res.status(404).json(getResponse(null, 'Not Found'));
         }
-    } else {
-        try{
-            const restaurants = req.body.restaurants.map(id => { return {restaurantId: id, votes: []}});
-            const editedPoll = await Poll.findOneAndUpdate({_id: req.params.pollId},
-            { 
-                ...req.body,
-                restaurants
-            }, {useFindAndModify: false});
-            if(editedPoll){
-                return res.status(200).json(getResponse({ ...editedPoll._doc, ...req.body, restaurants }, 'Success'));
-            } else {
-                return res.status(404).json(getResponse(null, 'Error while editing poll'));
-            }
-        } catch(err){
-            console.log(err);
-            return res.status(500).json(getResponse(null, err));
+        if(req.user != poll.author){
+            return res.status(403).json(getResponse(null, 'Unauthorized'));
         }
+        if(!poll.status){
+            return res.status(400).json(getResponse(null, 'Poll is not active anymore!'));
+        }
+
+        // you just cant edit restaurants...
+        await poll.updateOne({ ...req.body, restaurants: poll.restaurants });
+        return res.status(200).json(getResponse({ ...poll._doc, ...req.body, restaurants: poll.restaurants }, 'Success'));
+
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, err));
     }
 });
 
@@ -132,14 +120,23 @@ router.delete('/:pollId', async (req, res) => {
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
+    const {pollId} = req.body;
+
     try{
         // brisanje bi trebalo da ima proveru da li je onaj ko je kreirao poll osoba koja pokusava da izbrise poll
-        const deletedPoll = await Poll.findByIdAndDelete(req.params.pollId);
-        if(deletedPoll){
-            return res.status(200).json(getResponse(null, 'Success'));
-        } else {
+        let poll = await Poll.findById(pollId);
+        if(!poll){
             return res.status(404).json(getResponse(null, 'Not Found'));
         }
+        if(req.user != poll.author){
+            return res.status(403).json(getResponse(null, 'Unauthorized'));
+        }
+        if(!poll.status){
+            return res.status(400).json(getResponse(null, 'Poll is not active anymore!'));
+        }
+
+        await poll.remove(pollId);
+        return res.status(200).json(getResponse(null, 'Success'));
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));

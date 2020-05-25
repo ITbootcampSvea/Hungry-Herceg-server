@@ -26,17 +26,16 @@ router.get('/:mealId', async (req, res) => {
         }
     } catch(err){
         console.log(err);
-        return res.status(400).json(getResponse(null, err));
+        return res.status(500).json(getResponse(null, err));
     }
 });
 
 router.post('/', async (req, res) => {
-    /*if(!req.logged && req.user != 'admin'){
-        return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    if(!req.logged && req.user != 'Admin'){
+        return res.status(401).json(getResponse(null, 'Unauthorized'));
+    }
 
     const {name, price, tag} = req.body;
-    // input validation - should create func for this
     if(name == '' || tag == ''){
         return res.status(400).json(getResponse(null, 'Bad Request'));
     }
@@ -57,15 +56,15 @@ router.post('/', async (req, res) => {
         // send result
     } catch(err){
         console.log(err);
-        return res.status(400).json(getResponse(null, err));
+        return res.status(500).json(getResponse(null, err));
     }
 });
 
 // edit
 router.put('/:mealId', async (req, res) => {
-    /*if(!req.logged && req.user != 'admin'){
-        return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    if(!req.logged && req.user != 'Admin'){
+        return res.status(401).json(getResponse(null, 'Unauthorized'));
+    }
 
     const {name, price, tag} = req.body;
     if(name == '' || tag == ''){
@@ -82,15 +81,15 @@ router.put('/:mealId', async (req, res) => {
         }
     } catch(err){
         console.log(err);
-        return res.status(400).json(getResponse(null, err));
+        return res.status(500).json(getResponse(null, err));
     }
 });
 
 // delete
 router.delete('/:mealId', async (req, res) => {
-    /*if(!req.logged && req.user != 'admin'){
-        return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    if(!req.logged && req.user != 'Admin'){
+        return res.status(401).json(getResponse(null, 'Unauthorized'));
+    }
 
     try{
         const deletedMeal = await Meal.findByIdAndDelete(req.params.mealId);
@@ -101,7 +100,7 @@ router.delete('/:mealId', async (req, res) => {
         }
     } catch(err){
         console.log(err);
-        res.status(400).json(getResponse(null, err));
+        return res.status(500).json(getResponse(null, err));
     }
 });
 

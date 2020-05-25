@@ -39,7 +39,7 @@ router.get('/:restaurantId', async (req, res) => {
 
 // create
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'Admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
@@ -70,7 +70,7 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:restaurantId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'Admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
@@ -90,7 +90,7 @@ router.put('/:restaurantId', async (req, res) => {
 
 // delete
 router.delete('/:restaurantId', async (req, res) => {
-    if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'Admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 

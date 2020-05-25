@@ -31,7 +31,7 @@ router.get('/:userId', async (req, res) => {
         let user = await User.findById(userId);
         if(user){
             user = await prepareUsers([user]);
-            return res.status(200).json(getResponse({ ...user[0]._doc, password: null }, 'Success'));
+            return res.status(200).json(getResponse({ ...user[0], password: null }, 'Success'));
         } else {
             return res.status(400).json(getResponse(null, 'User does not exist'));
         }
@@ -43,6 +43,10 @@ router.get('/:userId', async (req, res) => {
 
 // create user
 router.post('/', async (req, res) => {
+    if(!req.logged && req.user != 'Admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     const {username} = req.body;
     const {password} = req.body
 
@@ -117,6 +121,10 @@ router.post('/login', async (req, res) => {
 });
 
 router.delete('/:userId', async (req, res) => {
+    if(!req.logged && req.user != 'Admin'){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
     if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
