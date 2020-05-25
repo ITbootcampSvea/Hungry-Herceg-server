@@ -1,36 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const {getResponse} = require('../helpers');
+const {getResponse, prepareOrderItems} = require('../helpers');
 
 // orderItem model
 const Order = require('../models/Order');
 const OrderItem = require("../models/OrderItem");
 const Meal = require('../models/Meal');
 const User = require('../models/User');
-
-const prepareOrderItems = orderItems => {
-    return new Promise((resolve, reject) => {
-        let newOrderItems = [];
-        orderItems.forEach(async (orderItem, i, arr) => {
-            try{
-                const meal = await Meal.findById(orderItem.meal);
-
-                newOrderItems.push({
-                    ...orderItem._doc,
-                    meal: meal
-                });
-
-                if(arr.length-1 == i){
-                    resolve(newOrderItems);
-                }
-            } catch(err){
-                console.log(err);
-                reject(err);
-            }
-        });
-    });
-}
 
 // GET
 // returns all order itemss
@@ -62,11 +39,11 @@ router.get('/:orderItemId', async (req, res) => {
 })
 
 router.post('/', async (req, res,) => {
-    /*if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
-    const {orderId, user, meal, quantity, note} = req.body;
+    const {orderId, meal, quantity, note} = req.body;
 
     try{
         const orderItem = new OrderItem({
@@ -76,6 +53,7 @@ router.post('/', async (req, res,) => {
             quantity: quantity,
             note: note
         });
+
         let savedOrderItem = await orderItem.save();
         if(savedOrderItem){
             // save to user history object
@@ -83,6 +61,7 @@ router.post('/', async (req, res,) => {
             user.history.push(savedOrderItem._id);
             await user.save();
 
+            // save to orderItemList in order
             const order = await Order.findById(orderId);
             order.orderItemList.push(savedOrderItem._id);
             await order.save();
@@ -100,11 +79,12 @@ router.post('/', async (req, res,) => {
 });
 
 router.put('/:orderItemId', async (req, res) => {
-    /*if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     const {orderItemId} = req.params;
+
     try{
         let editedOrderItem = await OrderItem.findByIdAndUpdate(
             {_id: req.params.orderItemId}, 
@@ -119,14 +99,25 @@ router.put('/:orderItemId', async (req, res) => {
 });
 
 router.delete('/:orderItemId', async (req, res) => {
-    /*if(!req.logged && req.user != 'admin'){
+    if(!req.logged && req.user != 'admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     const {orderItemId} = req.params;
+    
     try{
         const deletedOrderItem = await OrderItem.findByIdAndDelete({_id: orderItemId});
         if(deletedOrderItem){
+            let order = await Order.findById(deletedOrderItem.orderId);
+
+            // remove from order
+            for(let i = 0; i < order.orderItemList.length; i++){
+                if(order.orderItemList[i] == orderItemId){
+                    order.orderItemList.splice(i, 1);
+                }
+            }
+            await order.save();
+
             return res.status(200).json(getResponse(null, 'Success'));
         } else {
             return res.status(200).json(getResponse(null, 'Not Found'));

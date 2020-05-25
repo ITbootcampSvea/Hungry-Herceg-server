@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const orderItemSchema = new Schema({
     orderId: {
-      type: Number,
+      type: mongoose.Types.ObjectId,
       required: true
     },
     user: {

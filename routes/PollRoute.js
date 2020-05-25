@@ -134,11 +134,11 @@ router.get('/:pollId', async (req, res) => {
 
 // create poll
 router.post('/', async (req, res) => {
-    /*if(!req.logged){
+    if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
-    const {name, author, duration, restaurants} = req.body;
+    const {name, duration, restaurants} = req.body;
 
     // validation
     if(restaurants.length > 11 || restaurants.length == 0){
@@ -153,7 +153,7 @@ router.post('/', async (req, res) => {
 
     let pollModel = {
         name: name,
-        author: author,
+        author: req.user,
         createdAt: currentTime.toISOString(),
         duration: duration,
         status: true,
@@ -183,9 +183,9 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:pollId', async (req, res) => {
-    /*if(!req.logged){
+    if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     // update bi definitivno trebao malo da se doradi
     if(req.body.restaurants == undefined){
@@ -223,11 +223,12 @@ router.put('/:pollId', async (req, res) => {
 
 // delete
 router.delete('/:pollId', async (req, res) => {
-    /*if(!req.logged){
+    if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     try{
+        // brisanje bi trebalo da ima proveru da li je onaj ko je kreirao poll osoba koja pokusava da izbrise poll
         const deletedPoll = await Poll.findByIdAndDelete(req.params.pollId);
         if(deletedPoll){
             return res.status(200).json(getResponse(null, 'Success'));
@@ -242,9 +243,9 @@ router.delete('/:pollId', async (req, res) => {
 
 // vote
 router.post('/:pollId/vote', async (req, res) => {
-    /*if(!req.logged){
+    if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     // provera da li user nije vec glasao
     // return res.status(200).json(getResponse(null, 'You already voted'));
