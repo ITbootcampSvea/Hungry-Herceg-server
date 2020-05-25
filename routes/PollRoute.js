@@ -120,7 +120,7 @@ router.delete('/:pollId', async (req, res) => {
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
 
-    const {pollId} = req.body;
+    const {pollId} = req.params;
 
     try{
         // brisanje bi trebalo da ima proveru da li je onaj ko je kreirao poll osoba koja pokusava da izbrise poll
