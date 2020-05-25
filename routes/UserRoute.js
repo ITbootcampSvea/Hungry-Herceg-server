@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const {getResponse} = require('../helpers');
+const {getResponse, getOrderItemList} = require('../helpers');
 
 // 200 - Ok
 // 201 - Created
@@ -12,10 +12,11 @@ const {getResponse} = require('../helpers');
 // 404 - Not Found
 // 500 - Server Error
 
-// get single user
+// find
 router.get('/', async (req, res) => {
     try{
-        const users = await User.find();
+        let users = await User.find();
+        //users.history = await getOrderItemList(user)
         return res.status(200).json(getResponse(users, 'Success'));
     } catch(err){
         console.log(err);
@@ -23,6 +24,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+// get
 router.get('/:userId', async (req, res) => {
     const {userId} = req.params;
     try{

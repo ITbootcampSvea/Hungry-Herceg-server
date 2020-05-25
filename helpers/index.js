@@ -98,8 +98,29 @@ const prepareOrders = async orders => {
     });
 }
 
+const prepareUsers = users => {
+    return new Promise((resolve, reject) => {
+        let newUsers = [];
+        users.forEach(async (user, i, arr) => {
+            
+            const orderItems = await getOrderItemList(user.history);
+
+            newUsers.push({
+                ...user._doc,
+                history: orderItems,
+                password: null
+            });
+
+            if(arr.length-1 == i){
+                resolve(newUsers);
+            }
+        })
+    })
+}
+
 module.exports = {
     getResponse,
     prepareOrderItems,
-    prepareOrders
+    prepareOrders,
+    getOrderItemList
 }

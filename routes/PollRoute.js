@@ -144,7 +144,7 @@ router.post('/', async (req, res) => {
     if(restaurants.length > 11 || restaurants.length == 0){
         return res.status(400).json(getResponse(null, 'At least one restaurant must be present or not more then 10'));
     }
-    if(name == '' || author == '' || typeof(duration) != 'number'){
+    if(name == '' || req.user == '' || typeof(duration) != 'number'){
         return res.status(400).json(getResponse(null, 'Bad Request'));
     }
 
