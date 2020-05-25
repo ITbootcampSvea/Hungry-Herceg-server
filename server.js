@@ -4,6 +4,16 @@ const mongoose = require("mongoose");
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if(req.method === 'OPTIONS'){
+      return res.sendStatus(200);
+  }
+  next();
+});
+
 const auth = require("./middleware/auth");
 const userRoute = require("./routes/UserRoute");
 const pollRoute = require("./routes/PollRoute");
