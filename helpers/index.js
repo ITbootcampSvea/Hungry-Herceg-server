@@ -87,7 +87,8 @@ const prepareOrders = async orders => {
         for(let i = 0; i < orders.length; i++){
             try{
                 const orderItemList = await getOrderItemList(orders[i].orderItemList);
-                const restaurantId = await Restaurant.findById(orders[i].restaurantId);
+                let restaurantId = await Restaurant.findById(orders[i].restaurantId);
+                restaurantId = await prepareRestaurants([restaurantId]);
                 const pollId = await Poll.findById(orders[i].pollId);
 
                 newOrders.push({

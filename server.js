@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 // middlewares
 app.use(express.json());
 app.use(auth);
-timer();
+// timer();
 
 // API routes
 app.use("/user", userRoute);
