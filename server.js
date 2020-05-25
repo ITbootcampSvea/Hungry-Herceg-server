@@ -1,6 +1,15 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const auth = require("./middleware/auth");
+const timer = require('./middleware/timer');
+const userRoute = require("./routes/UserRoute");
+const pollRoute = require("./routes/PollRoute");
+const restaurantRoute = require("./routes/RestaurantRoute");
+const orderRoute = require("./routes/OrderRoute");
+const mealRoute = require("./routes/MealRoute");
+const orderItemRoute = require("./routes/OrderItemRoute");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -14,25 +23,12 @@ app.use((req, res, next) => {
   next();
 });
 
-const auth = require("./middleware/auth");
-const userRoute = require("./routes/UserRoute");
-const pollRoute = require("./routes/PollRoute");
-const restaurantRoute = require("./routes/RestaurantRoute");
-const orderRoute = require("./routes/OrderRoute");
-const mealRoute = require("./routes/MealRoute");
-const orderItemRoute = require("./routes/OrderItemRoute");
-
 // middlewares
 app.use(express.json());
 app.use(auth);
+timer();
 
-// useless interval
-/*let i = 0;
-setInterval(() => {
-    console.log(i);
-    i++;   
-}, 1000);*/
-
+// API routes
 app.use("/user", userRoute);
 app.use("/poll", pollRoute);
 app.use("/order", orderRoute);

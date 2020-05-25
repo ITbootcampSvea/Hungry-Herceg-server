@@ -1,6 +1,7 @@
 const OrderItem = require("../models/OrderItem");
 const Meal = require('../models/Meal');
 const Restaurant = require('../models/Restaurant');
+const Poll = require('../models/Poll');
 
 const getResponse = (data, message) => {
     return {
@@ -86,10 +87,14 @@ const prepareOrders = async orders => {
                     newOrders.push({...orders[i]._doc});
                 } else {
                     const orderItemList = await getOrderItemList(orders[i].orderItemList);
+                    const restaurantId = await Restaurant.findById(orders[i].restaurantId);
+                    const pollId = await Poll.findById(orders[i].pollId);
     
                     newOrders.push({
                         ...orders[i]._doc,
-                        orderItemList: orderItemList
+                        pollId,
+                        restaurantId,
+                        orderItemList
                     });
                 }
             } catch(err){
