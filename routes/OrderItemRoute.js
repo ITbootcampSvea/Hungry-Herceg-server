@@ -1,13 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const {getResponse, prepareOrderItems} = require('../helpers');
-
-// orderItem model
 const Order = require('../models/Order');
 const OrderItem = require("../models/OrderItem");
-const Meal = require('../models/Meal');
 const User = require('../models/User');
+
+const {getResponse, prepareOrderItems} = require('../helpers');
 
 // GET
 // returns all order itemss

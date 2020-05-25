@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const {getResponse, prepareOrders} = require('../helpers');
 
-// order model
 const Order = require("../models/Order");
+
+const {getResponse, prepareOrders} = require('../helpers');
 
 // GET
 // returns all order items
@@ -92,7 +92,7 @@ router.delete("/:orderId", async (req, res) => {
 
     try {
         const deletedOrder = await Order.findByIdAndDelete(req.params.orderId);
-        // izbrisi sve orderiteme iz deletedOrdera
+        // izbrisi sve orderiteme iz user.history (a mozda i ne)
         if(deletedOrder){
             return res.status(200).json(getResponse(null, 'Success'));
         } else {

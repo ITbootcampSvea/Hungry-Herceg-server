@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const {getResponse, getOrderItemList} = require('../helpers');
+const {getResponse, prepareUsers} = require('../helpers');
 
 // 200 - Ok
 // 201 - Created
@@ -16,7 +16,7 @@ const {getResponse, getOrderItemList} = require('../helpers');
 router.get('/', async (req, res) => {
     try{
         let users = await User.find();
-        //users.history = await getOrderItemList(user)
+        users = await prepareUsers(users)
         return res.status(200).json(getResponse(users, 'Success'));
     } catch(err){
         console.log(err);
@@ -28,9 +28,10 @@ router.get('/', async (req, res) => {
 router.get('/:userId', async (req, res) => {
     const {userId} = req.params;
     try{
-        const user = await User.findById(userId);
+        let user = await User.findById(userId);
         if(user){
-            return res.status(200).json(getResponse({ ...user._doc, password: null }, 'Success'));
+            user = await prepareUsers([user]);
+            return res.status(200).json(getResponse({ ...user[0]._doc, password: null }, 'Success'));
         } else {
             return res.status(400).json(getResponse(null, 'User does not exist'));
         }

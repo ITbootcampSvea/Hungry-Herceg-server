@@ -1,7 +1,6 @@
-const Order = require('../models/Order');
 const OrderItem = require("../models/OrderItem");
 const Meal = require('../models/Meal');
-const User = require('../models/User');
+const Restaurant = require('../models/Restaurant');
 
 const getResponse = (data, message) => {
     return {
@@ -99,28 +98,178 @@ const prepareOrders = async orders => {
 }
 
 const prepareUsers = users => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let newUsers = [];
-        users.forEach(async (user, i, arr) => {
-            
-            const orderItems = await getOrderItemList(user.history);
+        for(let i = 0; i < users.length; i++){
+            const orderItems = await getOrderItemList(users[i].history);
 
             newUsers.push({
-                ...user._doc,
+                ...users[i]._doc,
                 history: orderItems,
                 password: null
             });
+        }
+        resolve(newUsers);
+    });
+}
+
+const didUserVote = (restaurantIds, id) => {
+    return new Promise((resolve, reject) => {
+        restaurantIds.forEach((restaurantId, i, arr) => {
+            if(restaurantId == id){
+                resolve(true);
+            }
 
             if(arr.length-1 == i){
-                resolve(newUsers);
+                resolve(false);
+            }
+        })
+    });
+}
+
+const checkForVotes = (pollRestaurants, restaurantIds, userId) => {
+    return new Promise((resolve, reject) => {
+        let newRestaurants = [];
+        pollRestaurants.forEach(async (restaurant, i, arr) => {
+            const vote = await didUserVote(restaurantIds, restaurant.restaurantId);
+
+            if(vote){
+                let restaurantVotes = restaurant.votes;
+                restaurantVotes.push(userId)
+                newRestaurants.push({
+                    restaurantId: restaurant.restaurantId,
+                    votes: restaurantVotes
+                });
+            } else {
+                newRestaurants.push({
+                    restaurantId: restaurant.restaurantId,
+                    votes: restaurant.votes
+                });
+            }
+
+            if(arr.length-1 == i){
+                resolve(newRestaurants);
+            }
+        });
+    });
+}
+
+const preparePollRestaurants = restaurants => {
+    return new Promise((resolve, reject) => {
+        let newRestaurants = [];
+        restaurants.forEach(async (restaurant, i, arr) => {
+            try{
+                const dbRestaurant = await Restaurant.findById(restaurant.restaurantId);
+                
+                if(dbRestaurant){
+                    newRestaurants.push({
+                        restaurant: dbRestaurant._doc,
+                        votes: restaurant.votes
+                    });
+                }
+    
+                if(arr.length-1 == i){
+                    resolve(newRestaurants);
+                }
+            } catch(err){
+                console.log(err);
+                reject(err);
+            }
+        });
+    });
+}
+
+const preparePolls = polls => {
+    // returns ._doc of poll and gets restaurants
+    return new Promise((resolve, reject) => {
+        let newPolls = [];
+        polls.forEach(async (poll, i, arr) => {
+            try{
+                if(poll.restaurants.length == 0){
+                    newPolls.push(poll._doc);
+                } else {
+                    const pollRestaurants = await preparePollRestaurants(poll.restaurants);
+                    
+                    newPolls.push({
+                        ...poll._doc,
+                        restaurants: pollRestaurants
+                    });
+                }
+    
+                if(arr.length-1 == i){
+                    resolve(newPolls);
+                }
+            } catch(err){
+                console.log(err);
+                reject(err);
+            }
+        });
+    });
+}
+
+const getDocMeals = async meals => {
+    // returns ._doc of object
+    return new Promise((resolve, reject) => {
+        let newMeals = [];
+        meals.forEach((meal, i, arr) => {
+            newMeals.push(meal);
+            if(arr.length-1 == i){
+                resolve(newMeals);
             }
         })
     })
 }
 
+const getMeals = async mealIds => {
+    return new Promise(async (resolve, reject) => {
+        try{
+            // the query will ensure I get only meals with the provided list of ids
+            const meals = await Meal.find({_id: {$in: mealIds}});
+
+            if(meals.length == 0){
+                resolve([]);
+            }
+
+            const filteredMeals = await getDocMeals(meals);
+            resolve(filteredMeals);
+        } catch(err){
+            console.log(err);
+            reject(err);
+        }
+    });
+}
+
+const prepareRestaurants = async fetchedRestaurants => {
+    // fill meals object with meals
+    return new Promise((resolve, reject) => {
+        let newRestaurants = [];
+        fetchedRestaurants.forEach(async (restaurant, index, arr) => {
+            try{
+                const meals = await getMeals(restaurant.meals);
+            
+                newRestaurants.push({
+                    ...restaurant._doc,
+                    meals: meals
+                });
+                
+                if(arr.length-1 == index){
+                    resolve(newRestaurants)
+                }
+            } catch(err){
+                console.log(err);
+                reject(err);
+            }
+        });
+    });
+}
+
 module.exports = {
     getResponse,
-    prepareOrderItems,
+    preparePolls,
+    checkForVotes,
     prepareOrders,
-    getOrderItemList
+    prepareOrderItems,
+    getOrderItemList,
+    prepareRestaurants,
+    prepareUsers
 }

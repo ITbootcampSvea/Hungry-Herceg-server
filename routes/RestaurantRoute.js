@@ -1,65 +1,8 @@
 const router = require('express').Router();
 const Restaurant = require('../models/Restaurant');
-const Meal = require('../models/Meal');
-const {getResponse} = require('../helpers');
+const {getResponse, prepareRestaurants} = require('../helpers');
 
 // router middleware
-
-const getDocMeals = async meals => {
-    // returns ._doc of object
-    return new Promise((resolve, reject) => {
-        let newMeals = [];
-        meals.forEach((meal, i, arr) => {
-            newMeals.push(meal);
-            if(arr.length-1 == i){
-                resolve(newMeals);
-            }
-        })
-    })
-}
-
-const getMeals = async mealIds => {
-    return new Promise(async (resolve, reject) => {
-        try{
-            // the query will ensure I get only meals with the provided list of ids
-            const meals = await Meal.find({_id: {$in: mealIds}});
-
-            if(meals.length == 0){
-                resolve([]);
-            }
-
-            const filteredMeals = await getDocMeals(meals);
-            resolve(filteredMeals);
-        } catch(err){
-            console.log(err);
-            reject(err);
-        }
-    });
-}
-
-const prepareRestaurants = async fetchedRestaurants => {
-    // fill meals object with meals
-    return new Promise((resolve, reject) => {
-        let newRestaurants = [];
-        fetchedRestaurants.forEach(async (restaurant, index, arr) => {
-            try{
-                const meals = await getMeals(restaurant.meals);
-            
-                newRestaurants.push({
-                    ...restaurant._doc,
-                    meals: meals
-                });
-                
-                if(arr.length-1 == index){
-                    resolve(newRestaurants)
-                }
-            } catch(err){
-                console.log(err);
-                reject(err);
-            }
-        });
-    });
-}
 
 // find
 router.get('/', async (req, res) => {
