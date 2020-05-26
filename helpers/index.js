@@ -103,10 +103,11 @@ const prepareUsers = users => {
     });
 }
 
-const didUserVote = (restaurantIds, id) => {
+const findVotedRestaurant = (votedRestaurants, dbRestaurantId) => {
+    // returns true if user voted for this dbRestaurant
     return new Promise((resolve, reject) => {
-        restaurantIds.forEach((restaurantId, i, arr) => {
-            if(restaurantId == id){
+        votedRestaurants.forEach((votedRestaurant, i, arr) => {
+            if(votedRestaurant == dbRestaurantId){
                 resolve(true);
             }
 
@@ -117,23 +118,44 @@ const didUserVote = (restaurantIds, id) => {
     });
 }
 
-const checkForVotes = (pollRestaurants, restaurantIds, userId) => {
+const didUserVote = (votes, userId) => {
+    // returns true if user already voted
+    return new Promise((resolve, reject) => {
+        votes.forEach((id, i, arr) => {
+            if(id == userId){
+                resolve(true)
+            }
+
+            if(arr.length-1 == i){
+                resolve(false);
+            }
+        })
+    });
+}
+
+const checkForVotes = (dbPollRestaurants, votedRestaurants, userId) => {
+    // returns updated restaurant list with votes IF user didnt vote, IF user already voted returns 'Voted' string
     return new Promise((resolve, reject) => {
         let newRestaurants = [];
-        pollRestaurants.forEach(async (restaurant, i, arr) => {
-            const vote = await didUserVote(restaurantIds, restaurant.restaurantId);
+        dbPollRestaurants.forEach(async (dbRestaurant, i, arr) => {3
+            const userAlreadyVoted = await didUserVote(dbRestaurant.votes, userId);
+            if(userAlreadyVoted){
+                resolve('Voted')
+            }
 
-            if(vote){
-                let restaurantVotes = restaurant.votes;
+            const match = await findVotedRestaurant(votedRestaurants, dbRestaurant.restaurantId);
+
+            if(match){
+                let restaurantVotes = dbRestaurant.votes;
                 restaurantVotes.push(userId)
                 newRestaurants.push({
-                    restaurantId: restaurant.restaurantId,
+                    restaurantId: dbRestaurant.restaurantId,
                     votes: restaurantVotes
                 });
             } else {
                 newRestaurants.push({
-                    restaurantId: restaurant.restaurantId,
-                    votes: restaurant.votes
+                    restaurantId: dbRestaurant.restaurantId,
+                    votes: dbRestaurant.votes
                 });
             }
 

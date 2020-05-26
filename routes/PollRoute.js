@@ -150,7 +150,7 @@ router.post('/:pollId/vote', async (req, res) => {
     }
     
     const {pollId} = req.params;
-    const {restaurantIds} = req.body;
+    const votedRestaurants = req.body.restaurantIds;
     const {userId} = req;
     
     try{
@@ -162,13 +162,17 @@ router.post('/:pollId/vote', async (req, res) => {
             return res.status(400).json(getResponse(null, 'Poll is not active anymore!'));
         }
 
-        // provera da li user nije vec glasao
-        // return res.status(200).json(getResponse(null, 'You already voted'));
+        // budi bog s nama
+        const response = await checkForVotes(poll.restaurants, votedRestaurants, userId);
+        if(response == 'Voted'){
+            return res.status(200).json(getResponse(null, 'User already voted'));
+        } else {
+            poll.restaurants = response;
+            let savedPoll = await poll.save();
+            savedPoll = await preparePolls([savedPoll]);
+            return res.status(200).json(getResponse(savedPoll[0], 'Success'));
+        }
 
-        poll.restaurants = await checkForVotes(poll.restaurants, restaurantIds, userId);
-        const savedPoll = await poll.save();
-        // data nije enriched ali valjda nije neophodno
-        return res.status(200).json(getResponse(savedPoll, 'Success'));
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));
