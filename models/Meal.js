@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const mealSchema = new Schema({
+    restaurantId: {
+        type: mongoose.Types.ObjectId,
+        required: true
+    },
     name: {
         type: String,
         required: true
@@ -15,7 +19,6 @@ const mealSchema = new Schema({
         type: String,
         required: true
     }
-    
 });
 
 module.exports = mongoose.model('Meal', mealSchema);

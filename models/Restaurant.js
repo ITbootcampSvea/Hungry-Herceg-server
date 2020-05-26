@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 
 // if one of required properties is not provided, poll will not be created
 const restaurantSchema = new Schema({
-
     name: {
         type: String,
         required: true

@@ -62,40 +62,21 @@ const prepareOrders = async orders => {
     // enrich order object orderItems and meals
     return new Promise(async (resolve, reject) => {
         let newOrders = [];
-        /*orders.forEach(async (order, index, arr) => {
-            try{
-                if(order.orderItemList.length == 0){
-                    newOrders.push({...order._doc});
-                } else {
-                    const orderItemList = await getOrderItemList(order.orderItemList);
-    
-                    newOrders.push({
-                        ...order._doc,
-                        orderItemList: orderItemList
-                    });
-                }
-
-                if(arr.length-1 == index){
-                    resolve(newOrders)
-                }
-            } catch(err){
-                console.log(err);
-                reject(err);
-            }
-        });*/
-
         for(let i = 0; i < orders.length; i++){
             try{
+                // prepare data
                 const orderItemList = await getOrderItemList(orders[i].orderItemList);
-                let restaurantId = await Restaurant.findById(orders[i].restaurantId);
-                restaurantId = await prepareRestaurants([restaurantId]);
-                const pollId = await Poll.findById(orders[i].pollId);
+                let restaurant = await Restaurant.findById(orders[i].restaurantId);
+                restaurant = await prepareRestaurants([restaurant]);
+                const poll = await Poll.findById(orders[i].pollId);
 
                 newOrders.push({
-                    ...orders[i]._doc,
-                    pollId,
-                    restaurantId,
-                    orderItemList
+                    orderItemList,
+                    poll: poll,
+                    restaurant: restaurant[i],
+                    _id: orders[i].id,
+                    status: orders[i].status,
+                    duration: orders[i].duration
                 });
             } catch(err){
                 console.log(err);
