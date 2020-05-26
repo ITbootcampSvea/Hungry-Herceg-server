@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Meal = require('../models/Meal');
+const Restaurant = require('../models/Restaurant');
 
 const {getResponse} = require('../helpers/index');
 
@@ -35,19 +36,23 @@ router.post('/', async (req, res) => {
         return res.status(401).json(getResponse(null, 'Unauthorized'));
     }
 
-    const {name, price, tag} = req.body;
+    const {name, price, tag, restaurantId} = req.body;
     if(name == '' || tag == ''){
         return res.status(400).json(getResponse(null, 'Bad Request'));
     }
     
     try{
         const meal = new Meal({
+            restaurantId: restaurantId,
             name: name,
             price: price,
             tag: tag
         });
         // save to db
         const savedMeal = await meal.save();
+        let restaurant = await Restaurant.findById(restaurantId);
+        restaurant.meals.push(savedMeal.id);
+        await restaurant.save();
         if(savedMeal){
             return res.status(200).json(getResponse(savedMeal._doc, 'Success'));
         } else {
