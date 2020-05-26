@@ -58,6 +58,7 @@ router.post("/", async (req, res) => {
     const newOrder = new Order({
         pollId: pollId,
         restaurantId: restaurantId,
+        createdAt: new Date().toISOString(),
         duration: 20,
         status: true,
         orderItemsList: []

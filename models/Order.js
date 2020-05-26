@@ -10,6 +10,10 @@ const orderSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
+  createdAt: {
+    type: String,
+    required: true
+  },
   duration: {
     type: Number,
     required: true
