@@ -181,9 +181,9 @@ router.post('/:pollId/vote', async (req, res) => {
 });
 
 router.post('/:pollId/endpoll', async (req, res) => {
-    if(!req.logged){
+    /*if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     try{
         const poll = await Poll.findById(req.params.pollId);
