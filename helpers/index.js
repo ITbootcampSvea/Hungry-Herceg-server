@@ -68,7 +68,6 @@ const prepareOrders = async orders => {
                 const orderItemList = await getOrderItemList(orders[i].orderItemList);
                 let restaurant = await Restaurant.findById(orders[i].restaurantId);
                 restaurant = await prepareRestaurants([restaurant]);
-                console.log(restaurant[0]);
                 const poll = await Poll.findById(orders[i].pollId);
 
                 newOrders.push({

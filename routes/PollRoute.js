@@ -148,18 +148,26 @@ router.post('/:pollId/vote', async (req, res) => {
     if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
     }
-
-    // provera da li user nije vec glasao
-    // return res.status(200).json(getResponse(null, 'You already voted'));
     
-    const pollId = req.params.pollId;
-    const restaurantIds = req.body.restaurantId;
+    const {pollId} = req.params;
+    const {restaurantIds} = req.body;
     const {userId} = req;
     
     try{
         let poll = await Poll.findById(pollId);
+        if(!poll){
+            return res.status(404).json(getResponse(null, 'Not Found'));
+        }
+        if(!poll.status){
+            return res.status(400).json(getResponse(null, 'Poll is not active anymore!'));
+        }
+
+        // provera da li user nije vec glasao
+        // return res.status(200).json(getResponse(null, 'You already voted'));
+
         poll.restaurants = await checkForVotes(poll.restaurants, restaurantIds, userId);
         const savedPoll = await poll.save();
+        // data nije enriched ali valjda nije neophodno
         return res.status(200).json(getResponse(savedPoll, 'Success'));
     } catch(err){
         console.log(err);
