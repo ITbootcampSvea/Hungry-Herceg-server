@@ -259,6 +259,7 @@ const prepareRestaurants = async fetchedRestaurants => {
         let newRestaurants = [];
         fetchedRestaurants.forEach(async (restaurant, index, arr) => {
             try{
+                // console.log(restaurant);
                 const meals = await getMeals(restaurant.meals);
             
                 newRestaurants.push({
