@@ -221,6 +221,18 @@ const preparePolls = polls => {
     });
 }
 
+const deleteRestaurantMeals = meals => {
+    return new Promise((resolve, reject) => {
+        meals.forEach(async (meal, i, arr) => {
+            await Meal.findByIdAndRemove(meal._id);
+
+            if(arr.length-1 == i){
+                resolve('Success');
+            }
+        });
+    });
+}
+
 const getDocMeals = async meals => {
     // returns ._doc of object
     return new Promise((resolve, reject) => {
@@ -289,5 +301,7 @@ module.exports = {
     prepareOrderItems,
     getOrderItemList,
     prepareRestaurants,
+    getMeals,
+    deleteRestaurantMeals,
     prepareUsers
 }

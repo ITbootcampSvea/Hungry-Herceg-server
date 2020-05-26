@@ -22,7 +22,7 @@ const isEntityFinished = (entity, name) => {
         const requiredTime = createdAt.getMinutes() * 60 + createdAt.getHours() * 3600 + entity.duration * 60;
         const passedTime = currentDate.getMinutes() * 60 + currentDate.getHours() * 3600;
 
-        // console.log(`${name} - ${entity.id}\npassedTime: ${passedTime}\nrequiredTime: ${requiredTime}\n`);
+        // console.log(`${name} - ${entity.id}\npassedTime: ${passedTime / 60}\nrequiredTime: ${requiredTime / 60}\n`);
         // console.log(`${name} - ${entity.id}\npassedTime: ${currentDate.getHours()}:${currentDate.getMinutes() < 10 ? `0${currentDate.getMinutes()}` : currentDate.getMinutes()}\nrequiredTime: ${createdAt.getHours()}:${createdAt.getMinutes() < 10 ? `0${createdAt.getMinutes()}` : createdAt.getMinutes()}\n`);
         if(currentDate.getDate() > createdAt.getDate() ||
                passedTime >= requiredTime){

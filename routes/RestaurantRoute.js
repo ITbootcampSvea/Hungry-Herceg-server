@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const Restaurant = require('../models/Restaurant');
-const {getResponse, prepareRestaurants} = require('../helpers');
+const {getResponse, prepareRestaurants, getMeals, deleteRestaurantMeals} = require('../helpers');
 
 // router middleware
 
@@ -95,12 +95,16 @@ router.delete('/:restaurantId', async (req, res) => {
     }
 
     try{
-        const id = req.params.restaurantId;
-        const deletedRestaurant = await Restaurant.findByIdAndDelete(id);
-        if(deletedRestaurant){
+        const restaurant = await Restaurant.findById(req.params.restaurantId);
+        const meals = await getMeals(restaurant.meals);
+
+        // deleting
+        const response = await deleteRestaurantMeals(meals);
+        await restaurant.remove();
+        if(response == 'Success'){
             return res.status(200).json(getResponse(null, 'Success'));
         } else {
-            return res.status(404).json(getResponse(null, 'Not Found'));
+            return res.status(500).json(getResponse(null, 'Error while deleting restaurant'));
         }
     } catch(err){
         console.log(err);
