@@ -259,13 +259,16 @@ const prepareRestaurants = async fetchedRestaurants => {
         let newRestaurants = [];
         fetchedRestaurants.forEach(async (restaurant, index, arr) => {
             try{
-                // console.log(restaurant);
-                const meals = await getMeals(restaurant.meals);
-            
-                newRestaurants.push({
-                    ...restaurant._doc,
-                    meals: meals
-                });
+                if(restaurant != null){
+                    const meals = await getMeals(restaurant.meals);
+                    
+                    newRestaurants.push({
+                        ...restaurant._doc,
+                        meals
+                    });
+                } else {
+                    newRestaurants.push('Doesnt exist');
+                }
                 
                 if(arr.length-1 == index){
                     resolve(newRestaurants)

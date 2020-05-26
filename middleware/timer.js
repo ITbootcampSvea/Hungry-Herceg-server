@@ -115,7 +115,6 @@ module.exports = () => {
             }
         }
 
-
         // orders...
         let orders = await Order.find();
         orders = await orders.filter(order => order.status);
