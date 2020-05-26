@@ -43,9 +43,9 @@ router.get('/:userId', async (req, res) => {
 
 // create user
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'Admin'){
+    /*if(!req.logged && req.user != 'Admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     const {username} = req.body;
     const {password} = req.body

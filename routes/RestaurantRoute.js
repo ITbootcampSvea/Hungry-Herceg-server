@@ -39,9 +39,9 @@ router.get('/:restaurantId', async (req, res) => {
 
 // create
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'Admin'){
+    /*if(!req.logged && req.user != 'Admin'){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }
+    }*/
 
     if(req.body.name == '' || req.body.address == ''){
         return res.status(400).json(getResponse(null, 'Bad Request'));
