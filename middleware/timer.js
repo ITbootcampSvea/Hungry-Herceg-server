@@ -51,7 +51,7 @@ const getFinishedPolls = polls => {
             const requiredTime = createdAt.getMinutes() * 60 + createdAt.getHours() * 3600 + poll.duration * 60;
             const passedTime = currentDate.getMinutes() * 60 + currentDate.getHours() * 3600;
 
-            console.log(`Poll name: ${poll.name}\npassedTime: ${passedTime}\nrequiredTime: ${requiredTime}\n`);
+            // console.log(`Poll name: ${poll.name}\npassedTime: ${passedTime}\nrequiredTime: ${requiredTime}\n`);
             if(currentDate.getDate() > createdAt.getDate() ||
                passedTime >= requiredTime){
                 // add finished polls

@@ -137,11 +137,13 @@ const checkForVotes = (dbPollRestaurants, votedRestaurants, userId) => {
     // returns updated restaurant list with votes IF user didnt vote, IF user already voted returns 'Voted' string
     return new Promise((resolve, reject) => {
         let newRestaurants = [];
-        dbPollRestaurants.forEach(async (dbRestaurant, i, arr) => {3
-            const userAlreadyVoted = await didUserVote(dbRestaurant.votes, userId);
-            if(userAlreadyVoted){
-                resolve('Voted')
-            }
+        dbPollRestaurants.forEach(async (dbRestaurant, i, arr) => {
+            if(dbRestaurant.votes.length != 0){
+                const userAlreadyVoted = await didUserVote(dbRestaurant.votes, userId);
+                if(userAlreadyVoted){
+                    resolve('Voted')
+                }
+            }       
 
             const match = await findVotedRestaurant(votedRestaurants, dbRestaurant.restaurantId);
 
