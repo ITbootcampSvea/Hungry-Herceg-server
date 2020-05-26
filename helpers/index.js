@@ -76,7 +76,8 @@ const prepareOrders = async orders => {
                     restaurant: restaurant[0],
                     _id: orders[i].id,
                     status: orders[i].status,
-                    duration: orders[i].duration
+                    duration: orders[i].duration,
+                    createdAt: orders[i].createdAt
                 });
             } catch(err){
                 console.log(err);
@@ -293,6 +294,19 @@ const prepareRestaurants = async fetchedRestaurants => {
     });
 }
 
+const getWinnerRestaurant = restaurants => {
+    return new Promise((resolve, reject) => {
+        const votes = restaurants.map(r => r.votes.length);
+        let maxIndex = 0;
+        for(let i = 1; i < votes.length; i++){
+            if(votes[i] > votes[maxIndex]){
+                maxIndex = i;
+            }
+        }
+        resolve(maxIndex);
+    });
+}
+
 module.exports = {
     getResponse,
     preparePolls,
@@ -303,5 +317,6 @@ module.exports = {
     prepareRestaurants,
     getMeals,
     deleteRestaurantMeals,
-    prepareUsers
+    prepareUsers,
+    getWinnerRestaurant
 }

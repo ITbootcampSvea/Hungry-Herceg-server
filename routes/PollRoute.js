@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Poll = require('../models/Poll');
-const {getResponse, preparePolls, checkForVotes} = require('../helpers');
+const Order = require('../models/Order');
+const {getResponse, preparePolls, checkForVotes, getWinnerRestaurant, prepareOrders} = require('../helpers');
 
 // router middleware
 
@@ -173,6 +174,40 @@ router.post('/:pollId/vote', async (req, res) => {
             return res.status(200).json(getResponse(savedPoll[0], 'Success'));
         }
 
+    } catch(err){
+        console.log(err);
+        return res.status(500).json(getResponse(null, err));
+    }
+});
+
+router.post('/:pollId/endpoll', async (req, res) => {
+    if(!req.logged){
+        return res.status(403).json(getResponse(null, 'Unauthorized'));
+    }
+
+    try{
+        const poll = await Poll.findById(req.params.pollId);
+        await poll.updateOne({status: false});
+        
+        const index = await getWinnerRestaurant(poll.restaurants);
+
+        // create Order
+        const order = new Order({
+            pollId: poll.id,
+            restaurantId: poll.restaurants[index].restaurantId,
+            createdAt: new Date().toISOString(),
+            duration: 20,
+            status: true,
+            orderItemList: []
+        });
+
+        let createdOrder = await order.save();
+        if(createdOrder){
+            createdOrder = await prepareOrders([createdOrder]);
+            return res.status(200).json(getResponse(createdOrder[0], 'Success'))
+        } else {
+            return res.status(500).json(getResponse(null, 'Error while saving order'));
+        }
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));

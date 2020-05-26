@@ -1,18 +1,6 @@
 const Poll = require('../models/Poll');
 const Order = require('../models/Order');
-
-const getWinnerRestaurant = restaurants => {
-    return new Promise((resolve, reject) => {
-        const votes = restaurants.map(r => r.votes.length);
-        let maxIndex = 0;
-        for(let i = 1; i < votes.length; i++){
-            if(votes[i] > votes[maxIndex]){
-                maxIndex = i;
-            }
-        }
-        resolve(maxIndex);
-    });
-}
+const {getWinnerRestaurant} = require('../helpers');
 
 const isEntityFinished = (entity, name) => {
     return new Promise((resolve, reject) => {
