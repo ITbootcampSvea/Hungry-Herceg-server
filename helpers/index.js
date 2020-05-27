@@ -10,6 +10,18 @@ const getResponse = (data, message) => {
     }
 }
 
+const deleteOrderItems = orderItemIds => {
+    return new Promise(async (resolve, reject) => {
+        orderItemIds.forEach(async (id, i, arr) => {
+            await OrderItem.findByIdAndRemove(id);
+
+            if(arr.length-1 == i){
+                resolve('Success');
+            }
+        });
+    });
+}
+
 const prepareOrderItems = orderItems => {
     return new Promise((resolve, reject) => {
         if(orderItems.length == 0){
@@ -222,10 +234,10 @@ const preparePolls = polls => {
     });
 }
 
-const deleteRestaurantMeals = meals => {
+const deleteRestaurantMeals = mealIds => {
     return new Promise((resolve, reject) => {
-        meals.forEach(async (meal, i, arr) => {
-            await Meal.findByIdAndRemove(meal._id);
+        mealIds.forEach(async (id, i, arr) => {
+            await Meal.findByIdAndRemove(id);
 
             if(arr.length-1 == i){
                 resolve('Success');
@@ -314,6 +326,7 @@ module.exports = {
     prepareOrders,
     prepareOrderItems,
     getOrderItemList,
+    deleteOrderItems,
     prepareRestaurants,
     getMeals,
     deleteRestaurantMeals,

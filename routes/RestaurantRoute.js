@@ -96,16 +96,17 @@ router.delete('/:restaurantId', async (req, res) => {
 
     try{
         const restaurant = await Restaurant.findById(req.params.restaurantId);
-        const meals = await getMeals(restaurant.meals);
+        if(!restaurant){
+            return res.json(404).json(getResponse(null, 'Not Found'));
+        }
 
         // deleting
-        const response = await deleteRestaurantMeals(meals);
-        await restaurant.remove();
-        if(response == 'Success'){
-            return res.status(200).json(getResponse(null, 'Success'));
-        } else {
-            return res.status(500).json(getResponse(null, 'Error while deleting restaurant'));
+        if(restaurant.meals != 0){
+            await deleteRestaurantMeals(restaurant.meals);
         }
+        await restaurant.remove();
+        
+        return res.status(200).json(getResponse(null, 'Success'));
     } catch(err){
         console.log(err);
         return res.status(500).json(getResponse(null, err));

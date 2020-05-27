@@ -4,7 +4,7 @@ const router = express.Router();
 const Order = require("../models/Order");
 const Poll = require('../models/Poll');
 
-const {getResponse, prepareOrders} = require('../helpers');
+const {getResponse, prepareOrders, deleteOrderItems} = require('../helpers');
 
 // GET
 // returns all order items
@@ -138,7 +138,11 @@ router.delete("/:orderId", async (req, res) => {
         if(!order.status){
             return res.status(400).json(getResponse(null, 'Order is not active anymore!'));
         }
-        
+
+        // deleting
+        if(order.orderItemList.length != 0){
+            await deleteOrderItems(order.orderItemList);
+        }
         await order.remove();
 
         // izbrisi sve orderiteme iz user.history (a mozda i ne)
