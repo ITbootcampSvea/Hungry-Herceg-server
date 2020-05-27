@@ -92,25 +92,29 @@ const updateOrders = orderIds => {
 module.exports = () => {
     // ends orders and polls automatically
     setInterval(async () => {
-        let polls = await Poll.find();
-        // get active polls
-        polls = await polls.filter(poll => poll.status);
-        
-        if(polls.length != 0){
-            const finishedPollIds = await getFinishedPolls(polls);
-            if(finishedPollIds != 0){
-                await createOrders(finishedPollIds);
+        try{
+            let polls = await Poll.find();
+            // get active polls
+            polls = await polls.filter(poll => poll.status);
+            
+            if(polls.length != 0){
+                const finishedPollIds = await getFinishedPolls(polls);
+                if(finishedPollIds != 0){
+                    await createOrders(finishedPollIds);
+                }
             }
+
+            // orders...
+            let orders = await Order.find();
+            orders = await orders.filter(order => order.status);
+
+            if(orders.length != 0){
+                const finishedOrders = await getFinishedOrders(orders);
+                // mislim da je ovde promise nepotreban
+                updateOrders(finishedOrders);
         }
-
-        // orders...
-        let orders = await Order.find();
-        orders = await orders.filter(order => order.status);
-
-        if(orders.length != 0){
-            const finishedOrders = await getFinishedOrders(orders);
-            // mislim da je ovde promise nepotreban
-            updateOrders(finishedOrders);
+        } catch(err){
+            console.log(err);
         }
     }, 10000);
 }

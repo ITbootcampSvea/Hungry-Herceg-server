@@ -9,8 +9,15 @@ const {getResponse, prepareOrders} = require('../helpers');
 // GET
 // returns all order items
 router.get("/", async (req, res) => {
+    if(filter != 'true' || filter != 'false'){
+        return res.status(200).json(getResponse(null, 'Bad request'));
+    }
+
+    const filter = req.query.status == 'true' ? true : false;
+
     try{
         let orders = await Order.find();
+        orders = await orders.filter(order => order.status == filter);
 
         if(orders.length == 0){
             return res.status(200).json(getResponse([], 'Success'));
