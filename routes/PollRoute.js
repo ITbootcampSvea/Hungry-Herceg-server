@@ -180,13 +180,20 @@ router.post('/:pollId/vote', async (req, res) => {
     }
 });
 
+// ends poll
 router.post('/:pollId/endpoll', async (req, res) => {
-    /*if(!req.logged){
+    if(!req.logged){
         return res.status(403).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     try{
         const poll = await Poll.findById(req.params.pollId);
+        if(req.user != poll.author){
+            return res.status(403).json(getResponse(null, 'Unauthorized'));
+        }
+        if(!poll.status){
+            return res.status(400).json(getResponse(null, 'Poll is not active anymore!'));
+        }
         await poll.updateOne({status: false});
         
         const index = await getWinnerRestaurant(poll.restaurants);

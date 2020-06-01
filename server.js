@@ -40,19 +40,17 @@ app.use("/meal", mealRoute);
 app.use("/orderitem", orderItemRoute);
 
 // connect to mongodb cluster
-mongoose
-  .connect(
-    `mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hunry-herceg?retryWrites=true&w=majority`,
-    {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-    }
-  )
-  .then((res) => {
-    app.listen(port, (req, res) => {
-      console.log(`Server started on port ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err);
+mongoose.connect(`mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hunry-herceg?retryWrites=true&w=majority`,
+  {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+  }
+)
+.then(res => {
+  app.listen(port, (req, res) => {
+    console.log(`Server started on port ${port}`);
   });
+})
+.catch(err => {
+  console.log(err);
+});

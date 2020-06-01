@@ -4,16 +4,23 @@ const Restaurant = require('../models/Restaurant');
 const Poll = require('../models/Poll');
 
 const getResponse = (data, message) => {
+    if(data.length){
+        return {
+            total: data.length,
+            message: message,
+            data: data
+        }
+    }
     return {
-        data: data,
-        message: message
+        message: message,
+        data: data
     }
 }
 
 const deleteOrderItems = orderItemIds => {
-    return new Promise(async (resolve, reject) => {
-        orderItemIds.forEach(async (id, i, arr) => {
-            await OrderItem.findByIdAndRemove(id);
+    return new Promise((resolve, reject) => {
+        orderItemIds.forEach((id, i, arr) => {
+            OrderItem.findByIdAndRemove(id);
 
             if(arr.length-1 == i){
                 resolve('Success');
@@ -23,32 +30,29 @@ const deleteOrderItems = orderItemIds => {
 }
 
 const prepareOrderItems = orderItems => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         if(orderItems.length == 0){
             resolve([]);
         } else {
             let newOrderItems = [];
-            orderItems.forEach(async (orderItem, i, arr) => {
+            for(let i = 0; i < orderItems.length; i++){
                 try{
-                    if(orderItem.meal != null || orderItem.meal != undefined){
-                        const meal = await Meal.findById(orderItem.meal);
+                    if(orderItems[i].meal != null || orderItems[i].meal != undefined){
+                        const meal = await Meal.findById(orderItems[i].meal);
         
                         newOrderItems.push({
-                            ...orderItem._doc,
+                            ...orderItems[i]._doc,
                             meal: meal
                         });
                     } else {
-                        newOrderItems.push(orderItem._doc);
-                    }
-    
-                    if(arr.length-1 == i){
-                        resolve(newOrderItems);
+                        newOrderItems.push(orderItems[i]._doc);
                     }
                 } catch(err){
                     console.log(err);
                     reject(err);
                 }
-            });
+            };
+            resolve(newOrderItems);
         }
     });
 }
@@ -61,7 +65,6 @@ const getOrderItemList = orderItemIds => {
             }
             let orderItems = await OrderItem.find({_id: {$in: orderItemIds}});
             orderItems = await prepareOrderItems(orderItems);
-
             resolve(orderItems);
         } catch(err){
             console.log(err);
@@ -70,7 +73,7 @@ const getOrderItemList = orderItemIds => {
     });
 }
 
-const prepareOrders = async orders => {
+const prepareOrders = orders => {
     // enrich order object orderItems and meals
     return new Promise(async (resolve, reject) => {
         let newOrders = [];
@@ -119,125 +122,111 @@ const prepareUsers = users => {
 const findVotedRestaurant = (votedRestaurants, dbRestaurantId) => {
     // returns true if user voted for this dbRestaurant
     return new Promise((resolve, reject) => {
-        votedRestaurants.forEach((votedRestaurant, i, arr) => {
-            if(votedRestaurant == dbRestaurantId){
+        for(let i = 0; i < votedRestaurants.length; i++){
+            if(votedRestaurants[i] == dbRestaurant){
                 resolve(true);
             }
-
-            if(arr.length-1 == i){
-                resolve(false);
-            }
-        })
+        }
+        resolve(false);
     });
 }
 
 const didUserVote = (votes, userId) => {
     // returns true if user already voted
     return new Promise((resolve, reject) => {
-        votes.forEach((id, i, arr) => {
-            if(id == userId){
-                resolve(true)
+        for(let i = 0; i < votes.length; i++){
+            if(votes[i] == userId){
+                resolve(true);
             }
-
-            if(arr.length-1 == i){
-                resolve(false);
-            }
-        })
+        }
+        resolve(false);
     });
 }
 
 const checkForVotes = (dbPollRestaurants, votedRestaurants, userId) => {
     // returns updated restaurant list with votes IF user didnt vote, IF user already voted returns 'Voted' string
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let newRestaurants = [];
-        dbPollRestaurants.forEach(async (dbRestaurant, i, arr) => {
-            if(dbRestaurant.votes.length != 0){
-                const userAlreadyVoted = await didUserVote(dbRestaurant.votes, userId);
+        for(let i = 0; i < dbPollRestaurants.length; i++){
+            if(dbPollRestaurants[i].votes.length != 0){
+                const userAlreadyVoted = await didUserVote(dbPollRestaurants[i].votes, userId);
                 if(userAlreadyVoted){
                     resolve('Voted')
                 }
             }       
 
-            const match = await findVotedRestaurant(votedRestaurants, dbRestaurant.restaurantId);
+            const match = await findVotedRestaurant(votedRestaurants, dbPollRestaurants[i].restaurantId);
 
             if(match){
-                let restaurantVotes = dbRestaurant.votes;
+                let restaurantVotes = dbPollRestaurants[i].votes;
                 restaurantVotes.push(userId)
                 newRestaurants.push({
-                    restaurantId: dbRestaurant.restaurantId,
+                    restaurantId: dbPollRestaurants[i].restaurantId,
                     votes: restaurantVotes
                 });
             } else {
                 newRestaurants.push({
-                    restaurantId: dbRestaurant.restaurantId,
-                    votes: dbRestaurant.votes
+                    restaurantId: dbPollRestaurants[i].restaurantId,
+                    votes: dbPollRestaurants[i].votes
                 });
             }
-
-            if(arr.length-1 == i){
-                resolve(newRestaurants);
-            }
-        });
+        };
+        resolve(newRestaurants);
     });
 }
 
 const preparePollRestaurants = restaurants => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let newRestaurants = [];
-        restaurants.forEach(async (restaurant, i, arr) => {
+        for(let i = 0; i < restaurants.lenth; i++){
             try{
-                const dbRestaurant = await Restaurant.findById(restaurant.restaurantId);
+                const dbRestaurant = await Restaurant.findById(restaurants[i].restaurantId);
                 
                 if(dbRestaurant){
                     newRestaurants.push({
                         restaurant: dbRestaurant._doc,
-                        votes: restaurant.votes
+                        votes: restaurants[i].votes
                     });
-                }
-    
-                if(arr.length-1 == i){
-                    resolve(newRestaurants);
                 }
             } catch(err){
                 console.log(err);
                 reject(err);
             }
-        });
+        };
+        resolve(newRestaurants);
     });
 }
 
 const preparePolls = polls => {
     // returns ._doc of poll and gets restaurants
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let newPolls = [];
-        polls.forEach(async (poll, i, arr) => {
+        for(let i = 0; i < polls.length; i++){
             try{
-                if(poll.restaurants.length == 0){
-                    newPolls.push(poll._doc);
+                if(polls[i].restaurants.length == 0){
+                    newPolls.push(polls[i]._doc);
                 } else {
-                    const pollRestaurants = await preparePollRestaurants(poll.restaurants);
+                    const pollRestaurants = await preparePollRestaurants(polls[i].restaurants);
                     
                     newPolls.push({
-                        ...poll._doc,
+                        ...polls[i]._doc,
                         restaurants: pollRestaurants
                     });
-                }
-    
-                if(arr.length-1 == i){
-                    resolve(newPolls);
                 }
             } catch(err){
                 console.log(err);
                 reject(err);
             }
-        });
+        };
+        resolve(newPolls);
     });
 }
 
 const deleteRestaurantMeals = mealIds => {
     return new Promise((resolve, reject) => {
-        mealIds.forEach(async (id, i, arr) => {
-            await Meal.findByIdAndRemove(id);
+        // I dont need async because theres no need to wait for that data
+        mealIds.forEach((id, i, arr) => {
+            Meal.findByIdAndRemove(id);
 
             if(arr.length-1 == i){
                 resolve('Success');
@@ -250,12 +239,10 @@ const getDocMeals = async meals => {
     // returns ._doc of object
     return new Promise((resolve, reject) => {
         let newMeals = [];
-        meals.forEach((meal, i, arr) => {
-            newMeals.push(meal);
-            if(arr.length-1 == i){
-                resolve(newMeals);
-            }
-        })
+        for(let i = 0; i < meals.length; i++){
+            newMeals.push(meals[i]._doc);
+        }
+        resolve(newMeals);
     })
 }
 
@@ -278,31 +265,28 @@ const getMeals = async mealIds => {
     });
 }
 
-const prepareRestaurants = async fetchedRestaurants => {
+const prepareRestaurants = restaurants => {
     // fill meals object with meals
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let newRestaurants = [];
-        fetchedRestaurants.forEach(async (restaurant, index, arr) => {
+        for(let i = 0; i < restaurants.length; i++){
             try{
-                if(restaurant != null){
-                    const meals = await getMeals(restaurant.meals);
+                if(restaurants[i] != null){
+                    const meals = await getMeals(restaurants[i].meals);
                     
                     newRestaurants.push({
-                        ...restaurant._doc,
+                        ...restaurants[i]._doc,
                         meals
                     });
                 } else {
                     newRestaurants.push('Doesnt exist');
                 }
-                
-                if(arr.length-1 == index){
-                    resolve(newRestaurants)
-                }
             } catch(err){
                 console.log(err);
                 reject(err);
             }
-        });
+        }
+        resolve(newRestaurants);
     });
 }
 

@@ -32,7 +32,7 @@ router.get('/:mealId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    if(!req.logged && req.user != 'Admin'){
+    if(!req.logged && req.user == 'Admin'){
         return res.status(401).json(getResponse(null, 'Unauthorized'));
     }
 
@@ -71,7 +71,7 @@ router.post('/', async (req, res) => {
 
 // edit
 router.put('/:mealId', async (req, res) => {
-    if(!req.logged && req.user != 'Admin'){
+    if(!req.logged && req.user == 'Admin'){
         return res.status(401).json(getResponse(null, 'Unauthorized'));
     }
 
@@ -96,9 +96,9 @@ router.put('/:mealId', async (req, res) => {
 
 // delete
 router.delete('/:mealId', async (req, res) => {
-    /*if(!req.logged && req.user != 'Admin'){
+    if(!req.logged && req.user == 'Admin'){
         return res.status(401).json(getResponse(null, 'Unauthorized'));
-    }*/
+    }
 
     try{
         const deletedMeal = await Meal.findByIdAndDelete(req.params.mealId);
