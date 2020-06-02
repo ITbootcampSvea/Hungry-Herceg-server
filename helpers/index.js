@@ -4,13 +4,6 @@ const Restaurant = require('../models/Restaurant');
 const Poll = require('../models/Poll');
 
 const getResponse = (data, message) => {
-    if(data.length){
-        return {
-            total: data.length,
-            message: message,
-            data: data
-        }
-    }
     return {
         message: message,
         data: data
@@ -55,7 +48,7 @@ const prepareOrderItems = orderItems => {
             resolve(newOrderItems);
         }
     });
-}
+}   
 
 const getOrderItemList = orderItemIds => {
     return new Promise(async (resolve, reject) => {

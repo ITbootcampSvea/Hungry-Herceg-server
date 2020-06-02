@@ -16,7 +16,9 @@ const {getResponse, prepareUsers} = require('../helpers');
 router.get('/', async (req, res) => {
     try{
         let users = await User.find();
-        users = await prepareUsers(users)
+        if(users.length != 0)
+            return res.status(200).json(getResponse([], 'Success'));
+        users = await prepareUsers(users);
         return res.status(200).json(getResponse(users, 'Success'));
     } catch(err){
         console.log(err);
@@ -89,6 +91,7 @@ router.post('/', async (req, res) => {
     }
 });
 
+// login
 router.post('/login', async (req, res) => {
     const {username} = req.body;
     const {password} = req.body
