@@ -40,7 +40,7 @@ app.use("/meal", mealRoute);
 app.use("/orderitem", orderItemRoute);
 
 // connect to mongodb cluster
-mongoose.connect(`mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hunry-herceg?retryWrites=true&w=majority`,
+mongoose.connect(`mongodb+srv://nikolahot:pasteta@mydb-x0kvb.mongodb.net/hungry-herceg?retryWrites=true&w=majority`,
   {
     useUnifiedTopology: true,
     useNewUrlParser: true,
