@@ -171,7 +171,7 @@ const checkForVotes = (dbPollRestaurants, votedRestaurants, userId) => {
 const preparePollRestaurants = restaurants => {
     return new Promise(async (resolve, reject) => {
         let newRestaurants = [];
-        for(let i = 0; i < restaurants.lenth; i++){
+        for(let i = 0; i < restaurants.length; i++){
             try{
                 const dbRestaurant = await Restaurant.findById(restaurants[i].restaurantId);
                 

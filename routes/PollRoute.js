@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
     }
 
     const {name, duration, restaurants} = req.body;
-
+    
     // validation
     if(restaurants.length > 11 || restaurants.length == 0){
         return res.status(400).json(getResponse(null, 'At least one restaurant must be present or not more then 10'));
@@ -71,10 +71,11 @@ router.post('/', async (req, res) => {
     currentTime.setMinutes(minutes + duration);
     pollModel.ends = currentTime.toISOString();
     
+    const poll = new Poll(pollModel);
+    
     try{
         // save to db
-        const poll = new Poll(pollModel);
-        let savedPoll = await poll.save();
+        let savedPoll = await poll.save();  
         if(savedPoll){
             savedPoll = await preparePolls([savedPoll]);
             return res.status(200).json(getResponse(savedPoll[0], 'Success'));
