@@ -16,7 +16,7 @@ const {getResponse, prepareUsers} = require('../helpers');
 router.get('/', async (req, res) => {
     try{
         let users = await User.find();
-        if(users.length != 0)
+        if(users.length == 0)
             return res.status(200).json(getResponse([], 'Success'));
         users = await prepareUsers(users);
         return res.status(200).json(getResponse(users, 'Success'));
